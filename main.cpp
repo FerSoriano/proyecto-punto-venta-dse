@@ -1,7 +1,6 @@
 #include <iostream>
 #include <string>
 #include <iomanip> // uso de setw()
-#include <algorithm> // uso de sort()
 
 using namespace std;
 
@@ -44,8 +43,8 @@ void validarInput();
 void mostrarInventario();
 void mostrarProductos(int tipoOrden);
 void altaProducto();
-Producto buscarProducto(string nombreProducto);
-Usuario buscarUsuario(string nombreUsuario);
+Producto buscarProducto(const string& nombreProducto);
+Usuario buscarUsuario(const string& nombreUsuario);
 string convertirMinus(string str);
 void consultarProducto();
 void modificarProducto();
@@ -57,12 +56,14 @@ void modificarUsuario();
 void consultarUsuario();
 void mostrarCuentasUsuarios();
 void hacerVenta();
-void imprimirTicket(Venta venta);
-void restarInventario(int id, int cantidad);
-void reiniciarVenta(Venta &venta);
-void corteCajaVendedor(string vendedor);
+void imprimirTicket(const Venta& venta);
+void restarInventario(const int& id, const int& cantidad);
+void reiniciarVenta(Venta& venta);
+void corteCajaVendedor(const string& vendedor);
 void corteCajaGeneral();
 void limpiarConsola();
+void ordernarNombre();
+void ordernarId();
 
 // variables globales
 
@@ -85,7 +86,7 @@ Producto productos[100] = {
 int totalVentas = 0;
 Venta ventas[100];
 
-string currentUser;
+string currentUser; // manejar al usuario que esta dentro del sistema
 
 int main(){
     bool isExcecute = true;
@@ -244,42 +245,60 @@ void mostrarInventario(){
     }
 }
 
-bool compararPorId(const Producto &a, const Producto &b) {return a.id < b.id;}
-bool compararPorNombre(const Producto &a, const Producto &b) {
-    // se convierten a minusculas para poderlos ordenar correctamente.
-    string producto_a = convertirMinus(a.producto);
-    string producto_b = convertirMinus(b.producto);
-    return producto_a < producto_b;
+// Bubble Sort
+void ordernarNombre(){
+    Producto tmp;
+    for(int i=0; i < totalProductos - 1; i++){
+        for(int j=0; j < totalProductos - i - 1; j++){
+            if(convertirMinus(productos[j].producto) > convertirMinus(productos[j + 1].producto)){
+                tmp = productos[j];
+                productos[j] = productos[j + 1];
+                productos[j + 1] = tmp;
+            }
+        }
+    }
+}
+
+void ordernarId(){
+    Producto tmp;
+    for(int i=0; i < totalProductos - 1; i++){
+        for(int j=0; j < totalProductos - i - 1; j++){
+            if(productos[j].id > productos[j + 1].id){
+                tmp = productos[j];
+                productos[j] = productos[j + 1];
+                productos[j + 1] = tmp;
+            }
+        }
+    }
 }
 
 void mostrarProductos(int tipoOrden){
-    char resurtir;
-    if 
-        (tipoOrden == 1) sort(productos,productos + totalProductos,compararPorId); // se ordena por ID
-    else 
-        sort(productos,productos + totalProductos,compararPorNombre); // se ordena por nombre producto
-
+    if(tipoOrden == 1)
+        ordernarId();
+    else
+        ordernarNombre();
+    
     cout << "---------------------------------------------------------------------------\n\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------\n";
-        cout << left << setw(5) << "Id"
-                    << setw(15) << "Producto"
-                    << setw(10) << "PC"
-                    << setw(10) << "PV"
-                    << setw(15) << "Existencias"
-                    << setw(10) << "NR"
-                    << "Resurtir" << endl;
-
-        for (int i = 0; i < totalProductos; i++){
-            if(productos[i].status == 1){
-                resurtir = (productos[i].existencias <= productos[i].nivelReorden) ? '*' : ' ';
-                cout << left << setw(5) << productos[i].id
-                            << setw(15) << productos[i].producto
-                            << setw(10) << productos[i].pc
-                            << setw(10) << productos[i].pv
-                            << setw(15) << productos[i].existencias
-                            << setw(10) << productos[i].nivelReorden
-                            << resurtir << endl;
-            }
+    cout << left << setw(5) << "Id"
+                << setw(15) << "Producto"
+                << setw(10) << "PC"
+                << setw(10) << "PV"
+                << setw(15) << "Existencias"
+                << setw(10) << "NR"
+                << "Resurtir" << endl;
+    char resurtir;
+    for (int i = 0; i < totalProductos; i++){
+        if(productos[i].status == 1){
+            resurtir = (productos[i].existencias <= productos[i].nivelReorden) ? '*' : ' ';
+            cout << left << setw(5) << productos[i].id
+                        << setw(15) << productos[i].producto
+                        << setw(10) << productos[i].pc
+                        << setw(10) << productos[i].pv
+                        << setw(15) << productos[i].existencias
+                        << setw(10) << productos[i].nivelReorden
+                        << resurtir << endl;
         }
+    }
 }
 
 void altaProducto(){
@@ -319,15 +338,19 @@ void altaProducto(){
             productos[totalProductos].status = 1;
             totalProductos++; // se incrementa en 1 la cantidad de productos.
             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
-        } else { 
-            sort(productos,productos + totalProductos,compararPorId); // ordenamos la lista para poderla modificar.
-            productos[producto.id - 1].status = 1;
-            cout << "El producto " << producto.producto << " se dio de alta." << endl;
+        } else {
+            char res;
+            cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res;
+            if(tolower(res) == 'y'){
+                ordernarId(); // ordenamos la lista para poderla modificar.
+                productos[producto.id - 1].status = 1;
+                cout << "El producto " << producto.producto << " se dio de alta." << endl << endl;
+            }
         }
     }
 }
 
-Producto buscarProducto(string nombreProducto){
+Producto buscarProducto(const string& nombreProducto){
     Producto producto = {0, "", 0.0, 0.0, 0, 0, 0};
     for(int i = 0; i < totalProductos; i++){
         if(convertirMinus(productos[i].producto) == convertirMinus(nombreProducto)) { producto = productos[i]; break; }
@@ -335,7 +358,7 @@ Producto buscarProducto(string nombreProducto){
     return producto;
 }
 
-Usuario buscarUsuario(string nombreUsuario){
+Usuario buscarUsuario(const string& nombreUsuario){
     Usuario usuario = {"", "", 0, 0};
     for(int i = 0; i < totalUsuarios; i++){
         if(convertirMinus(usuarios[i].usuario) == convertirMinus(nombreUsuario)) { usuario = usuarios[i]; break; }
@@ -382,7 +405,7 @@ void modificarProducto(){
     float pc, pv;
     int existencia, nivelReorden, opcion;
 
-    sort(productos,productos + totalProductos,compararPorId); // ordenamos la lista para poderla modificar.
+    ordernarId(); // ordenamos la lista para poderla modificar.
     
     while (true){
         bool mostrarOpciones = true;
@@ -440,7 +463,7 @@ void bajaProducto(){
     Producto producto;
     string nombreProducto;
 
-    sort(productos,productos + totalProductos,compararPorId); // ordenamos la lista para poderla modificar.
+    ordernarId(); // ordenamos la lista para poderla modificar.
 
     while(true){
         cout << "\n\n\tBAJA DE PRODUCTO\n\n";
@@ -513,7 +536,7 @@ void altaUsuario(){
         if(usuario.status == 1){cout << "\n\n*** El usuario \"" << nombreUsuario << "\"  ya existe. Intenta de nuevo. ***\n\n"; continue;} // validacion estatus.
 
         cout << "Contraseña: "; cin >> pass;
-        cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipo; validarInput();
+        cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipo; validarInput(); // TODO: Validar que solo se pueda 1 o 2.
 
         // se agrega el producto.
         usuarios[totalUsuarios].usuario = nombreUsuario;
@@ -528,7 +551,6 @@ void altaUsuario(){
 
 void bajaUsuario(){
     string nombreUsuario;
-    
     while(true){
         bool usuarioEncontrado = false;
         cout << "\n\n\tBAJA USUARIO\n\n";
@@ -537,6 +559,7 @@ void bajaUsuario(){
 
         for(int i = 0; i<totalUsuarios; i++){
             if(convertirMinus(usuarios[i].usuario) == convertirMinus(nombreUsuario) && usuarios[i].status == 1) {
+                // TODO: Mostrar informacion del usuario y preguntar si esta seguro antes de darlo de baja.
                 usuarios[i].status = 0; 
                 cout << "El usuario \"" << usuarios[i].usuario << "\" se dio de baja\n";
                 usuarioEncontrado = true;
@@ -693,7 +716,7 @@ void hacerVenta(){
     }
 }
 
-void imprimirTicket(Venta venta){
+void imprimirTicket(const Venta& venta){
     float total = 0;
     cout << "\n\n-------------------------------------------------------\n\n";
     cout << "\t\tAbarrotes \"El Inge\"";
@@ -706,17 +729,16 @@ void imprimirTicket(Venta venta){
                     << "Subtotal" << endl;
     for(int i = 0; i < venta.totalProductosVentas; i++){
         float subtotal = venta.cantidad[i] * venta.pv[i];
-        //string precio = "$" + to_string(venta.productos[i]);
         total += subtotal;
         cout << left << setw(15) << venta.productos[i]
                 << setw(10) << venta.cantidad[i]
-                << setw(20) << venta.pv[i]
-                << subtotal << endl;
+                << setw(20) << venta.pv[i]  // TODO: Agregar formato de moneda
+                << subtotal << endl; // TODO: Agregar formato de moneda
     }
     cout << "\n\t\t\t\t     Total: $" << total << "\n\n-------------------------------------------------------\n\n";
 }
 
-void reiniciarVenta(Venta &venta) {
+void reiniciarVenta(Venta& venta) {
     venta.vendedor = "";
     for (int i = 0; i < venta.totalProductosVentas; i++) {
         venta.productos[i] = "";
@@ -727,7 +749,7 @@ void reiniciarVenta(Venta &venta) {
     venta.totalProductosVentas = 0;
 }
 
-void restarInventario(int id, int cantidad){
+void restarInventario(const int& id, const int& cantidad){
     for(int i=0; i<totalProductos; i++){
         if(productos[i].id == id){
             productos[i].existencias -= cantidad;
@@ -736,7 +758,7 @@ void restarInventario(int id, int cantidad){
     }
 }
 
-void corteCajaVendedor(string vendedor){
+void corteCajaVendedor(const string& vendedor){
     float ingresos = 0, egresos = 0;
     
     cout << "\n\n-------------------------------------------------------\n\n";
