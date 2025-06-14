@@ -216,32 +216,21 @@ void validarInput(){
 
 void mostrarInventario(){
     int option;
-    bool ejecutarMenu = true;
     
-    while(ejecutarMenu){
+    while(true){
         cout << "\n\n\tMOSTRAR INVENTARIO\n\nOrdenado por:\n";
         cout << "1. Por Id\n2. Por producto\n3. Regresar al menú anterior.\n\n";
         cout << "\tOpcion: "; cin >> option;
         validarInput();
-        switch (option)
-        {
-        case 1:
-            limpiarConsola();
-            mostrarProductos(1);
-            break;
-        case 2:
-            limpiarConsola();
-            mostrarProductos(2);
-            break;
-        case 3:
-            limpiarConsola();
-            ejecutarMenu = false;
-            break;
-        default:
-            limpiarConsola();
-            cout << "\n*** Opcion invalida. Intenta de nuevo. ***";
-            break;
+        limpiarConsola();
+        if(option == 1 || option == 2) {
+            mostrarProductos(option);
+            continue;
         }
+
+        if(option == 3){ break; }
+
+        cout << "\n*** Opcion invalida. Intenta de nuevo. ***";
     }
 }
 
@@ -313,20 +302,38 @@ void altaProducto(){
         if (nombreProducto == "*"){limpiarConsola(); break;}
 
         producto = buscarProducto(nombreProducto);
-        if(producto.status == 1){cout << "\n\n*** El producto \"" << nombreProducto << "\"  ya existe. Intenta de nuevo. ***\n\n"; continue;} // validacion estatus.
+        if(producto.status == 1){cout << "\n\n*** El producto \"" << nombreProducto << "\"  ya existe. Intenta de nuevo. ***\n\n\n"; continue;} // validacion estatus.
 
         if(producto.id == 0){
             do{
-                cout << "Precio compra: "; cin >> pc; validarInput();
-                cout << "Precio venta: "; cin >> pv; validarInput();
-                if(pc>pv) {cout << "\n\n*** El PC no puede ser mayor al PV. Intenta de nuevo. ***\n\n"; continue;}
-            }while(pc>pv);
+                do{
+                    cout << "Precio compra: "; cin >> pc; validarInput();
+                    if(pc <= 0){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; }
+                }while(pc <= 0);
+
+                do{
+                    cout << "Precio venta: "; cin >> pv; validarInput();
+                    if(pv <= 0){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; }
+                }while(pv <= 0);
+
+                if(pc > pv) {cout << "\n\n*** El Precio de Compra no puede ser mayor al Precio de Venta. Intenta de nuevo. ***\n\n\n";}
+
+            }while(pc > pv);
 
             do{
-                cout << "Existencia: "; cin >> existencia; validarInput();
-                cout << "Nivel de Reorden: "; cin >> nivelReorden; validarInput();
-                if(existencia<nivelReorden){cout << "\n\n*** La Existencia no puede ser menor que el Nivel de Reorden. Intenta de nuevo ***\n\n"; continue;}
-            }while(existencia<nivelReorden);
+                do{
+                    cout << "Existencia: "; cin >> existencia; validarInput();
+                    if(existencia <= 0){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; }
+                }while(existencia <= 0);
+
+                do{
+                    cout << "Nivel de Reorden: "; cin >> nivelReorden; validarInput();
+                    if(nivelReorden <= 0){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; }
+                }while(nivelReorden <= 0);
+
+                if(existencia < nivelReorden) {cout << "\n\n*** La Existencia no puede ser menor que el Nivel de Reorden. Intenta de nuevo. ***\n\n\n"; continue;}
+                
+            }while(existencia < nivelReorden);
 
             // se agrega el producto.
             productos[totalProductos].id = totalProductos + 1;
@@ -338,6 +345,7 @@ void altaProducto(){
             productos[totalProductos].status = 1;
             totalProductos++; // se incrementa en 1 la cantidad de productos.
             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
+            
         } else {
             char res;
             cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res;
