@@ -490,33 +490,27 @@ void mostrarMenuAdminCuentasUsuario(){
         cout << "\tOpcion: ";
         cin >> option;
         validarInput();
+        limpiarConsola();
         switch (option){
             case 1:
-                limpiarConsola();
                 altaUsuario();
                 break;
             case 2:
-                limpiarConsola();
                 bajaUsuario();
                 break;
             case 3:
-                limpiarConsola();
                 consultarUsuario();
                 break;
             case 4:
-                limpiarConsola();
                 modificarUsuario();
                 break;
             case 5:
-                limpiarConsola();
                 mostrarCuentasUsuarios();
                 break;
             case 6:
-                limpiarConsola();
                 ejecutarMenu = false;
                 break;
             default:
-                limpiarConsola();
                 cout << "\n*** Opcion invalida. Intenta de nuevo. ***";
                 break;
         }
@@ -563,6 +557,8 @@ void bajaUsuario(){
         for(int i = 0; i<totalUsuarios; i++){
             if(convertirMinus(usuarios[i].usuario) == convertirMinus(nombreUsuario) && usuarios[i].status == 1) {
                 // TODO: Mostrar informacion del usuario y preguntar si esta seguro antes de darlo de baja.
+                // TODO: Hacer doble confirmacion para dar de bajas admins
+                // TODO: Validar que exista al menos un admin.
                 usuarios[i].status = 0; 
                 cout << "El usuario \"" << usuarios[i].usuario << "\" se dio de baja\n";
                 usuarioEncontrado = true;
