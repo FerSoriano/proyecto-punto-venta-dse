@@ -5,7 +5,6 @@
 using namespace std;
 
 // definimos el Struct para almacenar los usuarios, productos y ventas
-// TODO: Mejorar control de flujo en las altas de usuarios
 
 struct Usuario{
     string usuario;
@@ -64,6 +63,8 @@ void corteCajaGeneral();
 void limpiarConsola();
 void ordernarNombre();
 void ordernarId();
+void mostrarEncabezadosProducto();
+void mostrarInfoProducto(const Producto& producto);
 
 // variables globales
 
@@ -267,25 +268,11 @@ void mostrarProductos(int tipoOrden){
     else
         ordernarNombre();
     
-    cout << "---------------------------------------------------------------------------\n\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------\n";
-    cout << left << setw(5) << "Id"
-                << setw(15) << "Producto"
-                << setw(10) << "PC"
-                << setw(10) << "PV"
-                << setw(15) << "Existencias"
-                << setw(10) << "NR"
-                << "Resurtir" << endl;
-    char resurtir;
+    cout << "---------------------------------------------------------------------------\n\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------";
+    mostrarEncabezadosProducto();
     for (int i = 0; i < totalProductos; i++){
         if(productos[i].status == 1){
-            resurtir = (productos[i].existencias <= productos[i].nivelReorden) ? '*' : ' ';
-            cout << left << setw(5) << productos[i].id
-                        << setw(15) << productos[i].producto
-                        << setw(10) << productos[i].pc
-                        << setw(10) << productos[i].pv
-                        << setw(15) << productos[i].existencias
-                        << setw(10) << productos[i].nivelReorden
-                        << resurtir << endl;
+            mostrarInfoProducto(productos[i]);
         }
     }
 }
@@ -348,11 +335,13 @@ void altaProducto(){
             
         } else {
             char res;
-            cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res;
+            cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res; cout << '\n';
             if(tolower(res) == 'y'){
                 ordernarId(); // ordenamos la lista para poderla modificar.
                 productos[producto.id - 1].status = 1;
-                cout << "El producto " << producto.producto << " se dio de alta." << endl << endl;
+                mostrarEncabezadosProducto();
+                mostrarInfoProducto(producto);
+                cout << "\n\n*** El producto " << producto.producto << " se dio de alta. ***\n\n";
             }
         }
     }
@@ -387,24 +376,34 @@ void consultarProducto(){
         if (nombreProducto == "*"){limpiarConsola(); break;}
         producto = buscarProducto(nombreProducto);
         if(producto.status == 1){
-            cout << "\n" << left << setw(5) << "Id"
-                    << setw(15) << "Producto"
-                    << setw(10) << "PC"
-                    << setw(10) << "PV"
-                    << setw(15) << "Existencias"
-                    << setw(20) << "Nivel de Reorden"
-                    << "St" << endl;
-            cout << left << setw(5) << producto.id
-                    << setw(15) << producto.producto
-                    << setw(10) << producto.pc
-                    << setw(10) << producto.pv
-                    << setw(15) << producto.existencias
-                    << setw(20) << producto.nivelReorden
-                    << producto.status << endl;
+            mostrarEncabezadosProducto();
+            mostrarInfoProducto(producto);
             continue;
         }
         cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
     }
+}
+
+void mostrarEncabezadosProducto(){
+    cout << "\n" << left << setw(5) << "Id"
+            << setw(15) << "Producto"
+            << setw(10) << "PC"
+            << setw(10) << "PV"
+            << setw(15) << "Existencias"
+            << setw(20) << "Nivel de Reorden"
+            << "Resurtir" << endl;
+}
+
+void mostrarInfoProducto(const Producto& producto){
+    char resurtir;
+    resurtir = (producto.existencias <= producto.nivelReorden) ? '*' : ' ';
+    cout << left << setw(5) << producto.id
+            << setw(15) << producto.producto
+            << setw(10) << producto.pc
+            << setw(10) << producto.pv
+            << setw(15) << producto.existencias
+            << setw(20) << producto.nivelReorden
+            << resurtir << endl;
 }
 
 void modificarProducto(){
@@ -421,8 +420,11 @@ void modificarProducto(){
         if (nombreProducto == "*"){limpiarConsola(); break;}
         producto = buscarProducto(nombreProducto);
         if(producto.status == 1){
+            limpiarConsola();
             while (mostrarOpciones){
                     cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< producto.producto << endl;
+                    mostrarEncabezadosProducto();
+                    mostrarInfoProducto(producto);
                     cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
                     cout << "\tOpcion: "; cin >> opcion; validarInput();
                     switch(opcion){
@@ -431,28 +433,28 @@ void modificarProducto(){
                             cout << "\nPC nuevo: "; cin >> pc; validarInput();
                             productos[producto.id - 1].pc = pc; // actualizamos el producto original con el ID.
                             producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\nPrecio de compra actualizado\n\n";
+                            cout << "\n\n*** Precio de compra actualizado ***\n\n";
                             break;
                         case 2:
                             cout << "\nPV actual: "<< producto.pv;
                             cout << "\nPV nuevo: "; cin >> pv; validarInput();
                             productos[producto.id - 1].pv = pv; // actualizamos el producto original con el ID.
                             producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\nPrecio de venta actualizado\n\n";
+                            cout << "\n\n*** Precio de venta actualizado ***\n\n";
                             break;
                         case 3:
                             cout << "\nExistencias actuales: "<< producto.existencias;
                             cout << "\nExistencias nuevas: "; cin >> existencia; validarInput();
                             productos[producto.id - 1].existencias = existencia; // actualizamos el producto original con el ID.
                             producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\nExistencia actualizada\n\n";
+                            cout << "\n\n*** Existencia actualizada ***\n\n";
                             break;
                         case 4:
                             cout << "\nNivel de reorden actual: "<< producto.nivelReorden;
                             cout << "\nNivel de reorden nuevo: "; cin >> nivelReorden; validarInput();
                             productos[producto.id - 1].nivelReorden = nivelReorden; // actualizamos el producto original con el ID.
                             producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\nNivel de reorden actualizado\n\n";
+                            cout << "\n\n*** Nivel de reorden actualizado ***\n\n";
                             break;
                         case 5:
                             limpiarConsola();
@@ -543,6 +545,7 @@ void altaUsuario(){
         usuario = buscarUsuario(nombreUsuario);
         if(usuario.status == 1){cout << "\n\n*** El usuario \"" << nombreUsuario << "\"  ya existe. Intenta de nuevo. ***\n\n"; continue;} // validacion estatus.
 
+        //TODO: Si el usuario ya existe, preguntar si lo quiere dar de alta.
         cout << "Contraseña: "; cin >> pass;
         cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipo; validarInput(); // TODO: Validar que solo se pueda 1 o 2.
 
@@ -582,7 +585,7 @@ void bajaUsuario(){
 void modificarUsuario(){
     string nombreUsuario, pass;
     int opcion, tipo;
-
+    // TODO: Agregar la informacion del usuario antes de moficicarlo.
     while (true){
         bool usuarioEncontrado = false;
         bool mostrarOpciones = true;
