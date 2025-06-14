@@ -143,41 +143,33 @@ void menuAdmin(){
             cout << "\tOpcion: ";
             cin >> option;
             validarInput();
+            limpiarConsola();
             switch (option){
                 case 1:
-                    limpiarConsola();
                     altaProducto();
                     break;
-                case 2:
-                    limpiarConsola();
+                case 2:                    
                     bajaProducto();
                     break;
                 case 3:
-                    limpiarConsola();
                     consultarProducto();
                     break;
                 case 4:
-                    limpiarConsola();
                     modificarProducto();
                     break;
                 case 5:
-                    limpiarConsola();
                     mostrarInventario();
                     break;
                 case 6:
-                    limpiarConsola();
                     mostrarMenuAdminCuentasUsuario();
                     break;
                 case 7:
-                    limpiarConsola();
                     corteCajaGeneral();
                     break;
                 case 8:
-                    limpiarConsola();
                     ejecutarMenu = false;
                     break;
                 default:
-                    limpiarConsola();
                     cout << "\n*** Opcion invalida. Intenta de nuevo. ***";
                     break;
             }
