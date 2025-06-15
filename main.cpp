@@ -50,7 +50,7 @@ void modificarProducto();
 void bajaProducto();
 void mostrarMenuAdminCuentasUsuario();
 void altaUsuario(Usuario* usuario, string nombreUsuario);
-void bajaUsuario();
+void bajaUsuario(Usuario* usuario, string nombreUsuario);
 void modificarUsuario();
 void consultarUsuario(Usuario* usuario, string nombreUsuario);
 void mostrarCuentasUsuarios();
@@ -67,6 +67,7 @@ void mostrarEncabezadosProducto();
 void mostrarInfoProducto(const Producto& producto);
 void mostrarEncabezadosUsuario();
 void mostrarInfoUsuario(const Usuario& usuario);
+int contarUsuariosAdmin();
 
 // variables globales
 
@@ -507,7 +508,13 @@ void mostrarMenuAdminCuentasUsuario(){
                 }
                 break;
             case 2:
-                bajaUsuario();
+                while(true){
+                    cout << "\n\n\tBAJA USUARIO\n\n";
+                    cout << "Usuario: "; cin >> nombreUsuario;
+                    if (nombreUsuario == "*"){limpiarConsola(); break;}
+                    Usuario* usuario = buscarUsuario(nombreUsuario);
+                    bajaUsuario(usuario, nombreUsuario);
+                }
                 break;
             case 3:
                 while(true){
@@ -570,29 +577,40 @@ void altaUsuario(Usuario* usuario, string nombreUsuario){
     }
 }
 
-// TODO: bajaUsuario() Refactorizar: Recibir usuario
-void bajaUsuario(){
-    string nombreUsuario;
-    while(true){
-        bool usuarioEncontrado = false;
-        cout << "\n\n\tBAJA USUARIO\n\n";
-        cout << "Usuario: "; cin >> nombreUsuario;
-        if (nombreUsuario == "*"){limpiarConsola(); break;}
-
-        for(int i = 0; i<totalUsuarios; i++){
-            if(convertirMinus(usuarios[i].usuario) == convertirMinus(nombreUsuario) && usuarios[i].status == 1) {
-                // TODO: Mostrar informacion del usuario y preguntar si esta seguro antes de darlo de baja.
-                // TODO: Hacer doble confirmacion para dar de bajas admins
-                // TODO: Validar que exista al menos un admin.
-                usuarios[i].status = 0; 
-                cout << "El usuario \"" << usuarios[i].usuario << "\" se dio de baja\n";
-                usuarioEncontrado = true;
-                break; 
+void bajaUsuario(Usuario* usuario, string nombreUsuario){
+    if(usuario == nullptr || usuario->status == 0){
+        cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n";
+        return;
+    }
+    if(usuario->status == 1){
+        char res;
+        cout << "\nEstas seguro que quieres darlo de baja? (y/n): "; cin >> res; cout << '\n';
+        if(tolower(res) == 'y'){
+            if(usuario->tipo == 1){ // 1 = admin
+                cout << "El usuario es admin, por favor vuelve a confirmar (y/n): "; cin >> res; cout << '\n';
+                if(tolower(res) == 'y'){
+                    if(contarUsuariosAdmin() == 1){
+                        cout << "\n\n*** Error! Debe existir por lo menos un admin. ***\n\n";
+                        return;
+                    }
+                    usuario->status = 0; 
+                    cout << "El usuario \"" << usuario->usuario << "\" se dio de baja\n";
+                }
+            }
+            else{
+                usuario->status = 0; 
+                cout << "El usuario \"" << usuario->usuario << "\" se dio de baja\n";
             }
         }
-
-        if(!usuarioEncontrado){cout << "\n\n***Usuario \"" << nombreUsuario << "\" no encontrado. Intenta de nuevo. ***\n\n";}
     }
+}
+
+int contarUsuariosAdmin(){
+    int totalAdmin = 0;
+    for(int i=0; i < totalUsuarios; i++){
+        if(usuarios[i].tipo == 1 && usuarios[i].status == 1) totalAdmin++;
+    }
+    return totalAdmin;
 }
 
 // TODO: modificarUsuario() Refactorizar: Recibir usuario
