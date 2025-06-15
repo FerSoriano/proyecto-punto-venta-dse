@@ -65,6 +65,8 @@ void ordernarNombre();
 void ordernarId();
 void mostrarEncabezadosProducto();
 void mostrarInfoProducto(const Producto& producto);
+void mostrarEncabezadosUsuario();
+void mostrarInfoUsuario(const Usuario& usuario);
 
 // variables globales
 
@@ -561,8 +563,9 @@ void altaUsuario(Usuario* usuario, string nombreUsuario){
         cout << "\nEl Usuario estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res; cout << '\n';
         if(tolower(res) == 'y'){
             usuario->status = 1;
-            //TODO: mostar info del usuario
-            cout << "\nEl usuario " << usuario->usuario << " se dio de alta.\n\n";
+            mostrarEncabezadosUsuario();
+            mostrarInfoUsuario(*usuario);
+            cout << "\n\nEl usuario " << usuario->usuario << " se dio de alta.\n\n";
         }
     }
 }
@@ -638,35 +641,40 @@ void modificarUsuario(){
     }
 }
 
+void mostrarEncabezadosUsuario(){
+    cout << "\n" << left 
+        << setw(15) << "Usuario"
+        << setw(10) << "Pass"
+        << setw(10) << "Tipo"
+        << "St" << endl;
+}
+
+void mostrarInfoUsuario(const Usuario& usuario){
+    cout << left 
+        << setw(15) << usuario.usuario
+        << setw(10) << usuario.pass
+        << setw(10) << usuario.tipo
+        << usuario.status << endl;
+}
+
+
 void consultarUsuario(Usuario* usuario, string nombreUsuario){
-    if(usuario == nullptr){
+    if(usuario == nullptr || usuario->status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n\n";
         return;
     }
     if(usuario->status == 1){
-        cout << "\n" << left << setw(15) << "Usuario"
-                << setw(10) << "Pass"
-                << setw(10) << "Tipo"
-                << "St" << endl;
-        cout << left << setw(15) << usuario->usuario
-                << setw(10) << usuario->pass
-                << setw(10) << usuario->tipo
-                << usuario->status << endl;
+        mostrarEncabezadosUsuario();
+        mostrarInfoUsuario(*usuario); // Dereferenciar el puntero
     }
 }
 
 void mostrarCuentasUsuarios(){
     cout << "---------------------------------------------------------------------------\n\t\t\tMOSTRAR CUENTAS DE USUARIOS\n---------------------------------------------------------------------------\n";
-    cout << "\n" << left << setw(15) << "Usuario"
-                    << setw(10) << "Pass"
-                    << setw(10) << "Tipo"
-                    << "St" << endl;
+    mostrarEncabezadosUsuario();
     for(int i = 0; i < totalUsuarios; i++){
         if(usuarios[i].status == 1){
-            cout << left << setw(15) << usuarios[i].usuario
-                    << setw(10) << usuarios[i].pass
-                    << setw(10) << usuarios[i].tipo
-                    << usuarios[i].status << endl;
+            mostrarInfoUsuario(usuarios[i]);
         }
     }
     cout << "\n\n";
