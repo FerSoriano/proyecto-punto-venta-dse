@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <iomanip> // uso de setw()
+#include <sstream>
 
 using namespace std;
 
@@ -68,6 +69,7 @@ void mostrarInfoProducto(const Producto& producto);
 void mostrarEncabezadosUsuario();
 void mostrarInfoUsuario(const Usuario& usuario);
 int contarUsuariosAdmin();
+string formatoMoneda(float monto);
 
 // variables globales
 
@@ -141,7 +143,7 @@ void menuAdmin(){
         bool ejecutarMenu = true;
         
         while(ejecutarMenu){
-            cout << "\n\t\t\t\t\tSesion: " << currentUser; //TODO: implementar en todos los menus?
+            cout << "\n\t\t\t\t\tUsuario: " << currentUser; //TODO: implementar en todos los menus?
             cout << "\n\n\tMENU ADMINISTRADOR\n\n";
             cout << "1. Altas\n2. Bajas\n3. Consultas\n4. Modificaciones\n5. Mostrar Inventario\n6. Administracion de Cuentas de Usuario\n7. Corte de caja general\n8. Regresar al menu anterior.\n\n";
             cout << "\tOpcion: ";
@@ -478,7 +480,7 @@ void bajaProducto(){
         if (nombreProducto == "*"){limpiarConsola(); break;}
 
         producto = buscarProducto(nombreProducto);
-        if(producto.status == 0){cout << "\n\n***Prodcuto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; continue;}
+        if(producto.status == 0){cout << "\n\n***Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; continue;}
 
         productos[producto.id - 1].status = 0;
         cout << "El producto \"" << producto.producto << "\" se dio de baja\n";
@@ -780,18 +782,24 @@ void imprimirTicket(const Venta& venta){
     cout << "Vendedor: " << currentUser << endl;
 
     cout << "\n" << left << setw(15) << "Producto"
-                    << setw(10) << "Cantidad"
+                    << setw(12) << "Cantidad"
                     << setw(20) << "Precio Unitario"
                     << "Subtotal" << endl;
     for(int i = 0; i < venta.totalProductosVentas; i++){
         float subtotal = venta.cantidad[i] * venta.pv[i];
         total += subtotal;
         cout << left << setw(15) << venta.productos[i]
-                << setw(10) << venta.cantidad[i]
-                << setw(20) << venta.pv[i]  // TODO: Agregar formato de moneda
-                << subtotal << endl; // TODO: Agregar formato de moneda
+                << setw(12) << venta.cantidad[i]
+                << setw(20) << formatoMoneda(venta.pv[i])
+                << formatoMoneda(subtotal) << endl;
     }
     cout << "\n\t\t\t\t     Total: $" << total << "\n\n-------------------------------------------------------\n\n";
+}
+
+string formatoMoneda(float monto){
+    ostringstream oss;
+    oss << "$" << fixed << setprecision(2) << monto;
+    return oss.str();
 }
 
 void reiniciarVenta(Venta& venta) {
