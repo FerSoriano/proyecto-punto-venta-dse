@@ -48,7 +48,7 @@ Usuario* buscarUsuario(const string& nombreUsuario);
 string convertirMinus(string str);
 void consultarProducto();
 void modificarProducto();
-void bajaProducto();
+bool bajaProducto(Producto* producto);
 void mostrarMenuAdminCuentasUsuario();
 void altaUsuario(Usuario* usuario, string nombreUsuario);
 void bajaUsuario(Usuario* usuario, string nombreUsuario);
@@ -72,6 +72,7 @@ int contarUsuariosAdmin();
 string formatoMoneda(float monto);
 bool reactivarProducto(Producto* producto);
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno);
+string solicitarProductoAlUsuario(const string& mensajeEntrada);
 
 // variables globales
 
@@ -156,10 +157,9 @@ void menuAdmin(){
             validarInput();
             limpiarConsola();
             switch (option){
-                case 1:
+                case 1: // alta
                     while(true){
-                        cout << "\n\n\tALTA DE PRODUCTO\n\n";
-                        cout << "Producto: "; cin >> nombreProducto;
+                        nombreProducto = solicitarProductoAlUsuario("ALTA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
                         Producto* producto = buscarProducto(nombreProducto);
@@ -168,7 +168,7 @@ void menuAdmin(){
                                 if(reactivarProducto(producto)){
                                     mostrarEncabezadosProducto();
                                     mostrarInfoProducto(*producto);
-                                    cout << "\n\n*** El producto " << producto->producto << " se dio de alta. ***\n\n";
+                                    cout << "\n\nEl producto " << producto->producto << " se dio de alta nuevamente.\n\n";
                                 }
                             }else{
                                 cout << "\n\n*** El producto \"" << nombreProducto << "\"  ya existe. Intenta de nuevo. ***\n\n\n";
@@ -180,15 +180,24 @@ void menuAdmin(){
                         pv = solicitarNumeroAlUsuario("Precio venta: ", pc, 99999.99, "\n\n*** El Precio de Venta no puede ser menor al Precio de Compra. Intenta de nuevo. ***\n\n\n", true);
                         existencia = solicitarNumeroAlUsuario("Existencia: ", 00.00, 99999.99, "\n\n*** Error en la cantidad. ***\n\n\n", false);
                         nivelReorden = solicitarNumeroAlUsuario("Nivel de Reorden: ", 00.00, existencia,"\n\n*** El Nivel de Reorden no puede ser mayor que la Existencia. Intenta de nuevo. ***\n\n\n", false);
-                        
+
                         if(altaProducto(nombreProducto,pc,pv,existencia,nivelReorden)){
                             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
                         }
                     }
                     break;
-                case 2:                
-                    // TODO: bajaProducto() - Pasar producto por parametro    
-                    bajaProducto();
+                case 2: // baja           
+                    while(true){
+                        nombreProducto = solicitarProductoAlUsuario("BAJA DE PRODUCTO");
+                        if (nombreProducto == "*"){limpiarConsola(); break;}
+
+                        Producto* producto = buscarProducto(nombreProducto);
+                        if(bajaProducto(producto)){
+                            cout << "\nEl producto \"" << producto->producto << "\" se dio de baja\n";
+                        }else {
+                            cout << "\n\n*** Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; 
+                        }
+                    }  
                     break;
                 case 3:
                     // TODO: consultarProducto() - Pasar producto por parametro
@@ -216,6 +225,13 @@ void menuAdmin(){
             }
         }
     }
+}
+
+string solicitarProductoAlUsuario(const string& mensajeEntrada){
+    string nombreProducto;
+    cout << "\n\n\t" << mensajeEntrada << "\n\n";
+    cout << "Producto: "; cin >> nombreProducto;
+    return nombreProducto;
 }
 
 bool reactivarProducto(Producto* producto){
@@ -475,23 +491,12 @@ void modificarProducto(){
     }
 }
 
-void bajaProducto(){
-    Producto* producto;
-    string nombreProducto;
-
-    ordernarId(); // ordenamos la lista para poderla modificar.
-
-    while(true){
-        cout << "\n\n\tBAJA DE PRODUCTO\n\n";
-        cout << "Producto: "; cin >> nombreProducto;
-        if (nombreProducto == "*"){limpiarConsola(); break;}
-
-        producto = buscarProducto(nombreProducto);
-        if(producto->status == 0){cout << "\n\n***Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; continue;}
-
-        productos[producto->id - 1].status = 0;
-        cout << "El producto \"" << producto->producto << "\" se dio de baja\n";
+bool bajaProducto(Producto* producto){
+    if(producto == nullptr || producto->status == 0){
+        return false;
     }
+    producto->status = 0;
+    return true;
 }
 
 void mostrarMenuAdminCuentasUsuario(){
