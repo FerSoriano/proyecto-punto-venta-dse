@@ -238,8 +238,7 @@ bool reactivarProducto(Producto* producto){
     char res;
     cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res; cout << '\n';
     if(tolower(res) == 'y'){
-        ordernarId(); // ordenamos la lista para poderla modificar.
-        productos[producto->id - 1].status = 1;
+        producto->status = 1;
         return true;
     }
     return false;
