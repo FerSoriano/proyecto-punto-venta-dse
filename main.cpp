@@ -46,7 +46,7 @@ bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia,
 Producto* buscarProducto(const string& nombreProducto);
 Usuario* buscarUsuario(const string& nombreUsuario);
 string convertirMinus(string str);
-void consultarProducto();
+bool consultarProducto(Producto* producto);
 void modificarProducto();
 bool bajaProducto(Producto* producto);
 void mostrarMenuAdminCuentasUsuario();
@@ -199,9 +199,15 @@ void menuAdmin(){
                         }
                     }  
                     break;
-                case 3:
-                    // TODO: consultarProducto() - Pasar producto por parametro
-                    consultarProducto();
+                case 3: // consulta
+                    while (true){
+                        nombreProducto = solicitarProductoAlUsuario("CONSULTA DE PRODUCTO");
+                        if (nombreProducto == "*"){limpiarConsola(); break;}
+                        Producto* producto = buscarProducto(nombreProducto);
+                        if(!consultarProducto(producto)){
+                            cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
+                        }
+                    }
                     break;
                 case 4:
                     // TODO: modificarProducto() - Pasar producto por parametro
@@ -389,20 +395,14 @@ string convertirMinus(string str){
     return str;
 }
 
-void consultarProducto(){
-    Producto* producto;
-    string nombreProducto;
-    while (true){
-        cout << "\n\n\tCONSULTA\n\nProducto: "; cin >> nombreProducto;
-        if (nombreProducto == "*"){limpiarConsola(); break;}
-        producto = buscarProducto(nombreProducto);
-        if(producto->status == 1){
-            mostrarEncabezadosProducto();
-            mostrarInfoProducto(*producto);
-            continue;
-        }
-        cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
+bool consultarProducto(Producto* producto){
+    if(producto == nullptr || producto->status ==0){
+        return false;
     }
+    mostrarEncabezadosProducto();
+    mostrarInfoProducto(*producto);
+    return true;
+    
 }
 
 void mostrarEncabezadosProducto(){
