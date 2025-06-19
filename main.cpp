@@ -46,8 +46,8 @@ bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia,
 Producto* buscarProducto(const string& nombreProducto);
 Usuario* buscarUsuario(const string& nombreUsuario);
 string convertirMinus(string str);
-void consultarProducto();
-void modificarProducto();
+bool consultarProducto(Producto* producto);
+bool modificarProducto(Producto* producto, const string& campoModificar, float valor);
 bool bajaProducto(Producto* producto);
 void mostrarMenuAdminCuentasUsuario();
 void altaUsuario(Usuario* usuario, string nombreUsuario);
@@ -73,6 +73,8 @@ string formatoMoneda(float monto);
 bool reactivarProducto(Producto* producto);
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno);
 string solicitarProductoAlUsuario(const string& mensajeEntrada);
+void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
+void menuModificaciones(Producto* producto);
 
 // variables globales
 
@@ -199,13 +201,28 @@ void menuAdmin(){
                         }
                     }  
                     break;
-                case 3:
-                    // TODO: consultarProducto() - Pasar producto por parametro
-                    consultarProducto();
+                case 3: // consulta
+                    while (true){
+                        nombreProducto = solicitarProductoAlUsuario("CONSULTA DE PRODUCTO");
+                        if (nombreProducto == "*"){limpiarConsola(); break;}
+                        Producto* producto = buscarProducto(nombreProducto);
+                        if(!consultarProducto(producto)){
+                            cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
+                        }
+                    }
                     break;
-                case 4:
-                    // TODO: modificarProducto() - Pasar producto por parametro
-                    modificarProducto();
+                case 4: // modificar
+                    while (true){
+                        nombreProducto = solicitarProductoAlUsuario("MODIFICACIONES");
+                        if (nombreProducto == "*"){limpiarConsola(); break;}
+                        
+                        Producto* producto = buscarProducto(nombreProducto);
+                        if(producto == nullptr || producto->status == 0){
+                            cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
+                            continue;
+                        }
+                        menuModificaciones(producto);        
+                    }
                     break;
                 case 5:
                     mostrarInventario();
@@ -389,20 +406,14 @@ string convertirMinus(string str){
     return str;
 }
 
-void consultarProducto(){
-    Producto* producto;
-    string nombreProducto;
-    while (true){
-        cout << "\n\n\tCONSULTA\n\nProducto: "; cin >> nombreProducto;
-        if (nombreProducto == "*"){limpiarConsola(); break;}
-        producto = buscarProducto(nombreProducto);
-        if(producto->status == 1){
-            mostrarEncabezadosProducto();
-            mostrarInfoProducto(*producto);
-            continue;
-        }
-        cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
+bool consultarProducto(Producto* producto){
+    if(producto == nullptr || producto->status ==0){
+        return false;
     }
+    mostrarEncabezadosProducto();
+    mostrarInfoProducto(*producto);
+    return true;
+    
 }
 
 void mostrarEncabezadosProducto(){
@@ -420,74 +431,81 @@ void mostrarInfoProducto(const Producto& producto){
     resurtir = (producto.existencias <= producto.nivelReorden) ? '*' : ' ';
     cout << left << setw(5) << producto.id
             << setw(15) << producto.producto
-            << setw(10) << producto.pc
-            << setw(10) << producto.pv
+            << setw(10) << producto.pc // TODO: formato de moneda
+            << setw(10) << producto.pv // TODO: formato de moneda
             << setw(15) << producto.existencias
             << setw(20) << producto.nivelReorden
             << resurtir << endl;
 }
 
-void modificarProducto(){
-    Producto* producto;
-    string nombreProducto;
+void menuModificaciones(Producto* producto){
+    bool mostrarOpciones = true;
     float pc, pv;
     int existencia, nivelReorden, opcion;
+    limpiarConsola();
+    while(mostrarOpciones){
+            cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< producto->producto << endl;
+            mostrarEncabezadosProducto();
+            mostrarInfoProducto(*producto);
+            cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
+            cout << "\tOpcion: "; cin >> opcion; validarInput();
+            switch(opcion){
+                case 1:
+                    solicitarYActualizarCampoProducto(producto,"Precio de Compra actual: ",producto->pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
+                    break;
+                case 2:
+                    solicitarYActualizarCampoProducto(producto,"Precio de Venta actual: ",producto->pv,"Precio de Venta nuevo: ","pv","Precio de venta actualizado");
+                    break;
+                case 3:
+                    solicitarYActualizarCampoProducto(producto,"Existencias actuales: ",producto->existencias,"Existencias nuevas: ","existencias","Existencias actualizadas");
+                    break;
+                case 4:
+                    solicitarYActualizarCampoProducto(producto,"Nivel de reorden actual: ",producto->nivelReorden,"Nivel de reorden nuevo: ","nivelReorden","Nivel de reorden actualizado");
+                    break;
+                case 5:
+                    limpiarConsola();
+                    mostrarOpciones = false;
+                    break;
+                default:
+                    cout << "\n*** Opcion incorrecta. Intenta de nuevo. ***";
+                    break;
+            }
+        }
+}
 
-    ordernarId(); // ordenamos la lista para poderla modificar.
-    
-    while (true){
-        bool mostrarOpciones = true;
-        cout << "\n\n\tMODIFICACIONES\n\nProducto: "; cin >> nombreProducto;
-        if (nombreProducto == "*"){limpiarConsola(); break;}
-        producto = buscarProducto(nombreProducto);
-        if(producto->status == 1){
-            limpiarConsola();
-            while (mostrarOpciones){
-                    cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< producto->producto << endl;
-                    mostrarEncabezadosProducto();
-                    mostrarInfoProducto(*producto);
-                    cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
-                    cout << "\tOpcion: "; cin >> opcion; validarInput();
-                    switch(opcion){
-                        case 1:
-                            cout << "\nPC actual: "<< producto->pc;
-                            cout << "\nPC nuevo: "; cin >> pc; validarInput();
-                            productos[producto->id - 1].pc = pc; // actualizamos el producto original con el ID.
-                            producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\n*** Precio de compra actualizado ***\n\n";
-                            break;
-                        case 2:
-                            cout << "\nPV actual: "<< producto->pv;
-                            cout << "\nPV nuevo: "; cin >> pv; validarInput();
-                            productos[producto->id - 1].pv = pv; // actualizamos el producto original con el ID.
-                            producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\n*** Precio de venta actualizado ***\n\n";
-                            break;
-                        case 3:
-                            cout << "\nExistencias actuales: "<< producto->existencias;
-                            cout << "\nExistencias nuevas: "; cin >> existencia; validarInput();
-                            productos[producto->id - 1].existencias = existencia; // actualizamos el producto original con el ID.
-                            producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\n*** Existencia actualizada ***\n\n";
-                            break;
-                        case 4:
-                            cout << "\nNivel de reorden actual: "<< producto->nivelReorden;
-                            cout << "\nNivel de reorden nuevo: "; cin >> nivelReorden; validarInput();
-                            productos[producto->id - 1].nivelReorden = nivelReorden; // actualizamos el producto original con el ID.
-                            producto = buscarProducto(nombreProducto); // actualizamos nuestro producto temporal.
-                            cout << "\n\n*** Nivel de reorden actualizado ***\n\n";
-                            break;
-                        case 5:
-                            limpiarConsola();
-                            mostrarOpciones = false;
-                            break;
-                        default:
-                            cout << "*** Opcion incorrecta. Intenta de nuevo. ***";
-                            break;
-                    }
-                }
-        } else { limpiarConsola(); cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n"; }
+void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito){
+    float nuevoValor;
+    cout << "\n" << textoActual << valorActual;
+    cout << "\n" << textoNuevo; cin >> nuevoValor; validarInput();
+    if(modificarProducto(producto, campoModificar, nuevoValor)){
+        limpiarConsola();
+        cout << "\n\n"<< textoExito <<"\n\n";
+    }else{
+        cout << "\n\n*** Error. Intenta de nuevo ***\n\n";
     }
+}
+
+bool modificarProducto(Producto* producto, const string& campoModificar, float valor){
+    if(valor <= 0){ return false; }
+
+    if(campoModificar == "pc"){
+        producto->pc = valor;
+        return true;
+    }
+    if(campoModificar == "pv"){
+        producto->pv = valor;
+        return true;
+    }
+    if(campoModificar == "existencias"){
+        producto->existencias = valor;
+        return true;
+    }
+    if(campoModificar == "nivelReorden"){
+        producto->nivelReorden = valor;
+        return true;
+    }
+    
+    return false; // en dado caso que no entre en ninguna opcion.
 }
 
 bool bajaProducto(Producto* producto){
