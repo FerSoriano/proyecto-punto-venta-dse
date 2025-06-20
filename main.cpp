@@ -362,7 +362,7 @@ void mostrarProductos(int tipoOrden){
     else
         ordernarNombre();
     
-    cout << "---------------------------------------------------------------------------\n\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------";
+    cout << "---------------------------------------------------------------------------------------\n\t\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------------------";
     mostrarEncabezadosProducto();
     for (int i = 0; i < totalProductos; i++){
         if(productos[i].status == 1){
@@ -419,8 +419,8 @@ bool consultarProducto(Producto* producto){
 void mostrarEncabezadosProducto(){
     cout << "\n" << left << setw(5) << "Id"
             << setw(15) << "Producto"
-            << setw(10) << "PC"
-            << setw(10) << "PV"
+            << setw(12) << "PC"
+            << setw(12) << "PV"
             << setw(15) << "Existencias"
             << setw(20) << "Nivel de Reorden"
             << "Resurtir" << endl;
@@ -431,8 +431,8 @@ void mostrarInfoProducto(const Producto& producto){
     resurtir = (producto.existencias <= producto.nivelReorden) ? '*' : ' ';
     cout << left << setw(5) << producto.id
             << setw(15) << producto.producto
-            << setw(10) << producto.pc // TODO: formato de moneda
-            << setw(10) << producto.pv // TODO: formato de moneda
+            << setw(12) << formatoMoneda(producto.pc)
+            << setw(12) << formatoMoneda(producto.pv)
             << setw(15) << producto.existencias
             << setw(20) << producto.nivelReorden
             << resurtir << endl;
