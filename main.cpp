@@ -804,6 +804,7 @@ void hacerVenta(){
         Venta ventaActual;
         string nombreProducto;
         int cantidad;
+        bool compraRealizada = false;
         
         cout << "\n\n\tVENTAS: " << currentUser <<"\n\n";
         while(true){
@@ -812,20 +813,21 @@ void hacerVenta(){
             if(nombreProducto == "*"){ // imprimir ticket
                 limpiarConsola(); 
                 ventas[totalVentas] = ventaActual; // agregamos la venta a la lista
+                compraRealizada = true;
                 imprimirTicket(ventaActual); 
                 totalVentas++; // se incrementa en uno las ventas
                 reiniciarVenta(ventaActual); // se vuelve a inicializar vacio
                 continue;
             }
             if(nombreProducto == "**"){ // corte de caja vendedor
-                limpiarConsola();
+                if(!compraRealizada){ cout << "\n\n*** Finaliza la compra primero con '*' e intenta de nuevo. ***\n\n\n"; continue; } limpiarConsola();
                 corteCajaVendedor(currentUser);
                 break;
             }
 
             producto = buscarProducto(nombreProducto);
             // validamos que el producto exista o no este dado de baja
-            if(producto->status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
+            if(producto == nullptr || producto->status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
             // validamos que tengan existencias
             if(producto->existencias <= 0){ cout << "\n\n*** El producto no tiene existencia. Intenta de nuevo ***\n\n"; continue; }
 
