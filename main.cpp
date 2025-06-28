@@ -33,6 +33,12 @@ struct Venta{
     int totalProductosVentas = 0;
 };
 
+// Nueva estructura para manejar Usuarios con Nodos
+struct NodoUsuario{
+    Usuario usuario;
+    NodoUsuario* next;
+};
+
 
 // Prototipos funciones
 
@@ -44,16 +50,16 @@ void mostrarInventario();
 void mostrarProductos(int tipoOrden);
 bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden);
 Producto* buscarProducto(const string& nombreProducto);
-Usuario* buscarUsuario(const string& nombreUsuario);
+NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario);
 string convertirMinus(string str);
 bool consultarProducto(Producto* producto);
 bool modificarProducto(Producto* producto, const string& campoModificar, float valor);
 bool bajaProducto(Producto* producto);
 void mostrarMenuAdminCuentasUsuario();
-void altaUsuario(Usuario* usuario, string nombreUsuario);
-void bajaUsuario(Usuario* usuario, string nombreUsuario);
-void modificarUsuario(Usuario* usuario, string nombreUsuario);
-void consultarUsuario(Usuario* usuario, string nombreUsuario);
+void altaUsuario(NodoUsuario* nodo, string nombreUsuario);
+void bajaUsuario(NodoUsuario* nodo, string nombreUsuario);
+void modificarUsuario(NodoUsuario* nodo, string nombreUsuario);
+void consultarUsuario(NodoUsuario* nodo, string nombreUsuario);
 void mostrarCuentasUsuarios();
 void hacerVenta();
 void imprimirTicket(const Venta& venta);
@@ -76,15 +82,13 @@ string solicitarProductoAlUsuario(const string& mensajeEntrada);
 void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
 void menuModificaciones(Producto* producto);
 
+// NODOS
+NodoUsuario* inicializarListaUsuarios();
+bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario);
+
 // variables globales
 
 int totalUsuarios = 3;
-Usuario usuarios[100] = {
-    {"admin", "123", 1, 1}, 
-    {"vend1", "123", 2, 1}, 
-    {"vend2", "123", 2, 1}
-};
-
 int totalProductos = 5;
 Producto productos[100] = {
     {1,"Agua",13.39,18.55,12,4,1},
@@ -98,6 +102,9 @@ int totalVentas = 0;
 Venta ventas[100];
 
 string currentUser; // manejar al usuario que esta dentro del sistema
+
+NodoUsuario* listaUsuarios = inicializarListaUsuarios();
+
 
 int main(){
     bool isExcecute = true;
@@ -122,6 +129,42 @@ int main(){
         }
     }
     return 0;
+}
+
+NodoUsuario* inicializarListaUsuarios(){
+    Usuario usuarios[3] = {
+        {"admin", "123", 1, 1}, 
+        {"vend1", "123", 2, 1}, 
+        {"vend2", "123", 2, 1}
+    };
+    NodoUsuario* head = NULL;
+    for(int i=0; i < totalUsuarios; i++){
+        agregarUsuarioLista(head, usuarios[i]);
+    } 
+    return head;
+}
+
+bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario){
+    NodoUsuario* nuevoUsuario = new NodoUsuario();
+    nuevoUsuario->usuario = usuario;
+
+    NodoUsuario* ptr = head;
+    NodoUsuario* end;
+
+    while(ptr != NULL){
+        end = ptr;
+        ptr = ptr->next;
+    }
+
+    if(ptr == head){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
+        head = nuevoUsuario;
+    }else{
+        end->next = nuevoUsuario;
+    }
+
+    nuevoUsuario->next = NULL;
+
+    return true;
 }
 
 void limpiarConsola(){
@@ -281,23 +324,28 @@ float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorM
 
 bool validarLogin(int tipoUsuario){
     bool isValid = false;
-    string usuario, pass;
+    string nombreUsuario, pass;
     do{
         cout << "\nUsuario: ";
-        cin >> usuario;
-        if(usuario == "*"){limpiarConsola(); break;}
+        cin >> nombreUsuario;
+        if(nombreUsuario == "*"){limpiarConsola(); break;}
         cout << "\nPassword: ";
         cin >> pass;
 
-        for (int i = 0; i < totalUsuarios; i++){
-            if (usuarios[i].usuario == usuario && usuarios[i].pass == pass && usuarios[i].tipo == tipoUsuario && usuarios[i].status == 1){
-                currentUser = usuario;
-                isValid = true;
-                break;
-            }
+        NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+
+        if(nodo == nullptr){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; continue; }
+
+        if (nodo->usuario.usuario == nombreUsuario && nodo->usuario.pass == pass && nodo->usuario.tipo == tipoUsuario && nodo->usuario.status == 1){
+            currentUser = nodo->usuario.usuario;
+            isValid = true;
+            break;
         }
-        if (isValid == false) cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***" << endl;
+
+        if (isValid == false){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; }
+
     } while (!isValid);
+
     return isValid;
 }
 
@@ -392,11 +440,15 @@ Producto* buscarProducto(const string& nombreProducto){
     return nullptr;
 }
 
-Usuario* buscarUsuario(const string& nombreUsuario){
-    for(int i = 0; i < totalUsuarios; i++){
-        if(convertirMinus(usuarios[i].usuario) == convertirMinus(nombreUsuario)){
-            return &usuarios[i];
+NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario){
+    string usuario_aux;
+    NodoUsuario* ptr = lista;
+    while(ptr != NULL){
+        usuario_aux = ptr->usuario.usuario;
+        if(convertirMinus(usuario_aux) == convertirMinus(nombreUsuario)){
+            return ptr;
         }
+        ptr = ptr->next;
     }
     return nullptr;
 }
@@ -534,8 +586,8 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tALTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    Usuario* usuario = buscarUsuario(nombreUsuario);
-                    altaUsuario(usuario, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    altaUsuario(nodo, nombreUsuario);
                 }
                 break;
             case 2:
@@ -543,8 +595,8 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tBAJA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    Usuario* usuario = buscarUsuario(nombreUsuario);
-                    bajaUsuario(usuario, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario); // TODO: validar si es necesario pasar la lista por parametro.
+                    bajaUsuario(nodo, nombreUsuario);
                 }
                 break;
             case 3:
@@ -552,8 +604,8 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tCONSULTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    Usuario* usuario = buscarUsuario(nombreUsuario);
-                    consultarUsuario(usuario, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    consultarUsuario(nodo, nombreUsuario);
                 }
                 break;
             case 4:
@@ -561,8 +613,8 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tMODIFICACIONES\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    Usuario* usuario = buscarUsuario(nombreUsuario);
-                    modificarUsuario(usuario, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    modificarUsuario(nodo, nombreUsuario);
                 }
                 break;
             case 5:
@@ -578,80 +630,82 @@ void mostrarMenuAdminCuentasUsuario(){
     }
 }
 
-void altaUsuario(Usuario* usuario, string nombreUsuario){
+void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
     string pass;
     int tipoUsuario;
     
-    if(usuario == nullptr){
+    if(nodo == nullptr){
         cout << "Contraseña: "; cin >> pass;
         do{
             cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipoUsuario; validarInput();
             if(tipoUsuario != 1 && tipoUsuario != 2) { cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; }
         }while(tipoUsuario != 1 && tipoUsuario != 2);
+        
+        // se crea el usuario
+        Usuario nuevoUsuario;
+        nuevoUsuario.usuario = nombreUsuario;
+        nuevoUsuario.pass = pass;
+        nuevoUsuario.tipo = tipoUsuario;
+        nuevoUsuario.status = 1;
+        
         // se agrega el usuario.
-        usuarios[totalUsuarios].usuario = nombreUsuario;
-        usuarios[totalUsuarios].pass = pass;
-        usuarios[totalUsuarios].tipo = tipoUsuario;
-        usuarios[totalUsuarios].status = 1;
+        agregarUsuarioLista(listaUsuarios, nuevoUsuario);
         totalUsuarios++; // se incrementa en 1 la cantidad de usuarios.
         
         string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
         cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
         return;
     }
-    if(usuario->status == 1){
-        cout << "\n\n*** El usuario \"" << usuario->usuario << "\" ya existe. Intenta de nuevo. ***\n\n"; 
+    if(nodo->usuario.status == 1){
+        cout << "\n\n*** El usuario \"" << nodo->usuario.usuario << "\" ya existe. Intenta de nuevo. ***\n\n"; 
         return;
     }else {
         char res;
         cout << "\nEl Usuario estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res; cout << '\n';
         if(tolower(res) == 'y'){
-            usuario->status = 1;
+            nodo->usuario.status = 1;
             mostrarEncabezadosUsuario();
-            mostrarInfoUsuario(*usuario);
-            cout << "\n\nEl usuario " << usuario->usuario << " se dio de alta.\n\n";
+            mostrarInfoUsuario(nodo->usuario);
+            cout << "\n\nEl usuario " << nodo->usuario.usuario << " se dio de alta.\n\n";
         }
     }
 }
 
-void bajaUsuario(Usuario* usuario, string nombreUsuario){
-    if(usuario == nullptr || usuario->status == 0){
+void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
+    if(nodo == nullptr || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n";
         return;
     }
-    if(usuario->status == 1){
-        char res;
-        cout << "\nEstas seguro que quieres darlo de baja? (y/n): "; cin >> res; cout << '\n';
-        if(tolower(res) == 'y'){
-            if(usuario->tipo == 1){ // 1 = admin
-                cout << "El usuario es admin, por favor vuelve a confirmar (y/n): "; cin >> res; cout << '\n';
-                if(tolower(res) == 'y'){
-                    if(contarUsuariosAdmin() == 1){
-                        cout << "\n\n*** Error! Debe existir por lo menos un admin. ***\n\n";
-                        return;
-                    }
-                    usuario->status = 0; 
-                    cout << "El usuario \"" << usuario->usuario << "\" se dio de baja\n";
-                }
-            }
-            else{
-                usuario->status = 0; 
-                cout << "El usuario \"" << usuario->usuario << "\" se dio de baja\n";
-            }
+
+    char res;
+    cout << "\nEstas seguro que quieres darlo de baja? (y/n): "; cin >> res;
+    if(tolower(res) != 'y') return;
+
+    if(nodo->usuario.tipo == 1){ // 1 = admin
+        if(contarUsuariosAdmin() == 1){
+            cout << "\n\n*** Error! Debe existir por lo menos un admin. ***\n\n";
+            return;
         }
+        cout << "\nEl usuario es admin, por favor vuelve a confirmar (y/n): "; cin >> res;
+            if(tolower(res) != 'y') return;
     }
+
+    nodo->usuario.status = 0; 
+    cout << "\nEl usuario \"" << nodo->usuario.usuario << "\" se dio de baja\n";
 }
 
 int contarUsuariosAdmin(){
+    NodoUsuario* ptr = listaUsuarios;
     int totalAdmin = 0;
-    for(int i=0; i < totalUsuarios; i++){
-        if(usuarios[i].tipo == 1 && usuarios[i].status == 1) totalAdmin++;
+    while(ptr != NULL){
+        if(ptr->usuario.tipo == 1 && ptr->usuario.status == 1){ totalAdmin++; }
+        ptr = ptr->next;
     }
     return totalAdmin;
 }
 
-void modificarUsuario(Usuario* usuario, string nombreUsuario){
-    if(usuario == nullptr || usuario->status == 0){
+void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
+    if(nodo == nullptr || nodo->usuario.status == 0){
         cout << "\n\n***Usuario \"" << nombreUsuario << "\" no encontrado. Intenta de nuevo. ***\n\n";
         return;
     }
@@ -662,32 +716,32 @@ void modificarUsuario(Usuario* usuario, string nombreUsuario){
     while(mostrarOpciones){
         cout << "\n\n\tMODIFICACIONES\n\nUsuario: "<< nombreUsuario << endl;
         mostrarEncabezadosUsuario();
-        mostrarInfoUsuario(*usuario);
+        mostrarInfoUsuario(nodo->usuario);
         cout << "\n1. Contraseña\n2. Tipo\n3. Regresar al menu anterior\n\n";
         cout << "\tOpcion: "; cin >> opcion; validarInput();
         switch(opcion){
             case 1:
-            cout << "\nContraseña actual: "<< usuario->pass;
+            cout << "\nContraseña actual: "<< nodo->usuario.pass;
             cout << "\nContraseña nueva: "; cin >> pass;
-            usuario->pass = pass; // actualizamos el password
+            nodo->usuario.pass = pass; // actualizamos el password
             limpiarConsola();
             cout << "\n\n\tContraseña actualizada\n\n";
             break;
             case 2:
                 do{
-                    cout << "\nTipo actual: "<< usuario->tipo;
+                    cout << "\nTipo actual: "<< nodo->usuario.tipo;
                     cout << "\nTipo nuevo: "; cin >> tipoUsuario; validarInput();
                     if(tipoUsuario != 1 && tipoUsuario != 2) { cout << "\n\n*** Datos invalidos. (1 admin / 2 vendedor). Intenta de nuevo. ***\n\n\n"; }
                 }while(tipoUsuario != 1 && tipoUsuario != 2);
                 // solo se puede modificar el tipo del admin si existen mas de uno
-                if(usuario->tipo == 1 && tipoUsuario == 2){
+                if(nodo->usuario.tipo == 1 && tipoUsuario == 2){
                     if(contarUsuariosAdmin() == 1){
                         limpiarConsola();
                         cout << "\n\n*** Error! Debe existir por lo menos un admin. ***\n\n";
                         break;
                     }
                 }
-                usuario->tipo = tipoUsuario;
+                nodo->usuario.tipo = tipoUsuario;
                 limpiarConsola();
                 cout << "\n\n\tTipo de Usuario actualizado\n\n";
                 break;
@@ -720,24 +774,25 @@ void mostrarInfoUsuario(const Usuario& usuario){
 }
 
 
-void consultarUsuario(Usuario* usuario, string nombreUsuario){
-    if(usuario == nullptr || usuario->status == 0){
+void consultarUsuario(NodoUsuario* nodo, string nombreUsuario){
+    if(nodo == nullptr || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n\n";
         return;
     }
-    if(usuario->status == 1){
-        mostrarEncabezadosUsuario();
-        mostrarInfoUsuario(*usuario); // Dereferenciar el puntero
-    }
+    mostrarEncabezadosUsuario();
+    mostrarInfoUsuario(nodo->usuario);
 }
 
 void mostrarCuentasUsuarios(){
     cout << "---------------------------------------------------------------------------\n\t\t\tMOSTRAR CUENTAS DE USUARIOS\n---------------------------------------------------------------------------\n";
     mostrarEncabezadosUsuario();
-    for(int i = 0; i < totalUsuarios; i++){
-        if(usuarios[i].status == 1){
-            mostrarInfoUsuario(usuarios[i]);
+    
+    NodoUsuario* ptr = listaUsuarios;
+    while(ptr != NULL){
+        if(ptr->usuario.status == 1){
+            mostrarInfoUsuario(ptr->usuario);
         }
+        ptr = ptr->next;
     }
     cout << "\n\n";
 }
