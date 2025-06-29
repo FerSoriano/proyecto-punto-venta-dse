@@ -81,12 +81,15 @@ float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorM
 string solicitarProductoAlUsuario(const string& mensajeEntrada);
 void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
 void menuModificaciones(Producto* producto);
+void inicializarListaUsuarios();
+bool agregarUsuarioLista(const Usuario& usuario);
 
-// NODOS
-NodoUsuario* inicializarListaUsuarios();
-bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario);
+
 
 // variables globales
+
+NodoUsuario* listaUsuarios = NULL; // NODOS
+NodoUsuario* ultimoNodo = NULL; // NODOS
 
 int totalProductos = 5;
 Producto productos[100] = {
@@ -102,11 +105,8 @@ Venta ventas[100];
 
 string currentUser; // manejar al usuario que esta dentro del sistema
 
-NodoUsuario* listaUsuarios = inicializarListaUsuarios();
-NodoUsuario* ultimoNodo = NULL;
-
-
 int main(){
+    inicializarListaUsuarios();
     bool isExcecute = true;
     int optionMenu;
     while (isExcecute){
@@ -131,26 +131,24 @@ int main(){
     return 0;
 }
 
-NodoUsuario* inicializarListaUsuarios(){
+void inicializarListaUsuarios(){
     int totalUsuarios = 3;
     Usuario usuarios[3] = {
         {"admin", "123", 1, 1}, 
         {"vend1", "123", 2, 1}, 
         {"vend2", "123", 2, 1}
     };
-    NodoUsuario* head = NULL;
     for(int i=0; i < totalUsuarios; i++){
-        agregarUsuarioLista(head, usuarios[i]);
-    } 
-    return head;
+        agregarUsuarioLista(usuarios[i]);
+    }
 }
 
-bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario){
+bool agregarUsuarioLista(const Usuario& usuario){
     NodoUsuario* nuevoUsuario = new NodoUsuario();
     nuevoUsuario->usuario = usuario;
     
-    if(head == NULL){ // si es NULL se agrega el primer nodo.
-        head = nuevoUsuario;
+    if(listaUsuarios == NULL){ // si es NULL se agrega el primer nodo.
+        listaUsuarios = nuevoUsuario;
     }else{
         ultimoNodo->next = nuevoUsuario;
     }
@@ -643,7 +641,7 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
         nuevoUsuario.status = 1;
         
         // se agrega el usuario.
-        agregarUsuarioLista(listaUsuarios, nuevoUsuario);
+        agregarUsuarioLista(nuevoUsuario);
         
         string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
         cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
