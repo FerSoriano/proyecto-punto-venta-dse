@@ -104,6 +104,7 @@ Venta ventas[100];
 string currentUser; // manejar al usuario que esta dentro del sistema
 
 NodoUsuario* listaUsuarios = inicializarListaUsuarios();
+NodoUsuario* ultimoNodo = NULL;
 
 
 int main(){
@@ -147,22 +148,15 @@ NodoUsuario* inicializarListaUsuarios(){
 bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario){
     NodoUsuario* nuevoUsuario = new NodoUsuario();
     nuevoUsuario->usuario = usuario;
-
-    NodoUsuario* ptr = head;
-    NodoUsuario* end;
-
-    while(ptr != NULL){
-        end = ptr;
-        ptr = ptr->next;
-    }
-
-    if(ptr == head){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
+    
+    if(head == NULL){ // si es NULL se agrega el primer nodo.
         head = nuevoUsuario;
     }else{
-        end->next = nuevoUsuario;
+        ultimoNodo->next = nuevoUsuario;
     }
 
     nuevoUsuario->next = NULL;
+    ultimoNodo = nuevoUsuario;
 
     return true;
 }
