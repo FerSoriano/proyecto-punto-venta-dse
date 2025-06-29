@@ -50,7 +50,7 @@ void mostrarInventario();
 void mostrarProductos(int tipoOrden);
 bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden);
 Producto* buscarProducto(const string& nombreProducto);
-NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario);
+NodoUsuario* buscarUsuario(string nombreUsuario);
 string convertirMinus(string str);
 bool consultarProducto(Producto* producto);
 bool modificarProducto(Producto* producto, const string& campoModificar, float valor);
@@ -88,7 +88,6 @@ bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario);
 
 // variables globales
 
-int totalUsuarios = 3;
 int totalProductos = 5;
 Producto productos[100] = {
     {1,"Agua",13.39,18.55,12,4,1},
@@ -133,6 +132,7 @@ int main(){
 }
 
 NodoUsuario* inicializarListaUsuarios(){
+    int totalUsuarios = 3;
     Usuario usuarios[3] = {
         {"admin", "123", 1, 1}, 
         {"vend1", "123", 2, 1}, 
@@ -202,7 +202,7 @@ void menuAdmin(){
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
                         Producto* producto = buscarProducto(nombreProducto);
-                        if(producto != nullptr){
+                        if(producto != NULL){
                             if(producto->status == 0){
                                 if(reactivarProducto(producto)){
                                     mostrarEncabezadosProducto();
@@ -254,7 +254,7 @@ void menuAdmin(){
                         if (nombreProducto == "*"){limpiarConsola(); break;}
                         
                         Producto* producto = buscarProducto(nombreProducto);
-                        if(producto == nullptr || producto->status == 0){
+                        if(producto == NULL || producto->status == 0){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                             continue;
                         }
@@ -326,9 +326,9 @@ bool validarLogin(int tipoUsuario){
         cout << "\nPassword: ";
         cin >> pass;
 
-        NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+        NodoUsuario* nodo = buscarUsuario(nombreUsuario);
 
-        if(nodo == nullptr){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; continue; }
+        if(nodo == NULL){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; continue; }
 
         if (nodo->usuario.usuario == nombreUsuario && nodo->usuario.pass == pass && nodo->usuario.tipo == tipoUsuario && nodo->usuario.status == 1){
             currentUser = nodo->usuario.usuario;
@@ -431,12 +431,12 @@ Producto* buscarProducto(const string& nombreProducto){
             return &productos[i];
         }
     }
-    return nullptr;
+    return NULL;
 }
 
-NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario){
+NodoUsuario* buscarUsuario(string nombreUsuario){
     string usuario_aux;
-    NodoUsuario* ptr = lista;
+    NodoUsuario* ptr = listaUsuarios;
     while(ptr != NULL){
         usuario_aux = ptr->usuario.usuario;
         if(convertirMinus(usuario_aux) == convertirMinus(nombreUsuario)){
@@ -444,7 +444,7 @@ NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario){
         }
         ptr = ptr->next;
     }
-    return nullptr;
+    return NULL;
 }
 
 string convertirMinus(string str){
@@ -453,7 +453,7 @@ string convertirMinus(string str){
 }
 
 bool consultarProducto(Producto* producto){
-    if(producto == nullptr || producto->status ==0){
+    if(producto == NULL || producto->status ==0){
         return false;
     }
     mostrarEncabezadosProducto();
@@ -555,7 +555,7 @@ bool modificarProducto(Producto* producto, const string& campoModificar, float v
 }
 
 bool bajaProducto(Producto* producto){
-    if(producto == nullptr || producto->status == 0){
+    if(producto == NULL || producto->status == 0){
         return false;
     }
     producto->status = 0;
@@ -580,7 +580,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tALTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     altaUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -589,7 +589,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tBAJA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario); // TODO: validar si es necesario pasar la lista por parametro.
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     bajaUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -598,7 +598,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tCONSULTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     consultarUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -607,7 +607,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tMODIFICACIONES\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     modificarUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -628,7 +628,7 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
     string pass;
     int tipoUsuario;
     
-    if(nodo == nullptr){
+    if(nodo == NULL){
         cout << "Contraseña: "; cin >> pass;
         do{
             cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipoUsuario; validarInput();
@@ -644,7 +644,6 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
         
         // se agrega el usuario.
         agregarUsuarioLista(listaUsuarios, nuevoUsuario);
-        totalUsuarios++; // se incrementa en 1 la cantidad de usuarios.
         
         string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
         cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
@@ -666,7 +665,7 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
 }
 
 void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n";
         return;
     }
@@ -699,7 +698,7 @@ int contarUsuariosAdmin(){
 }
 
 void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n***Usuario \"" << nombreUsuario << "\" no encontrado. Intenta de nuevo. ***\n\n";
         return;
     }
@@ -769,7 +768,7 @@ void mostrarInfoUsuario(const Usuario& usuario){
 
 
 void consultarUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n\n";
         return;
     }
@@ -821,7 +820,7 @@ void hacerVenta(){
 
             producto = buscarProducto(nombreProducto);
             // validamos que el producto exista o no este dado de baja
-            if(producto == nullptr || producto->status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
+            if(producto == NULL || producto->status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
             // validamos que tengan existencias
             if(producto->existencias <= 0){ cout << "\n\n*** El producto no tiene existencia. Intenta de nuevo ***\n\n"; continue; }
 
