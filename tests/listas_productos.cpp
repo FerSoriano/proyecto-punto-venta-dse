@@ -46,45 +46,44 @@ int main(){
 
 // -------- FUNCIONES
 
-Nodo* inicializarListaUsuarios(){
-    Usuario usuarios[3] = {
-        {"admin", "123", 1, 1}, 
-        {"vend1", "123", 2, 1}, 
-        {"vend2", "123", 2, 1}
-    };
+// Nodo* inicializarListaUsuarios(){
+//     Usuario usuarios[3] = {
+//         {"admin", "123", 1, 1}, 
+//         {"vend1", "123", 2, 1}, 
+//         {"vend2", "123", 2, 1}
+//     };
 
-    Nodo* listaUsuarios = NULL;
-    Nodo* ptr = listaUsuarios;
+//     Nodo* listaUsuarios = NULL;
 
-    for(int i=0; i < totalUsuarios; i++){
-        agregarUsuario(listaUsuarios,usuarios[i]);
-    }
-    return listaUsuarios;
-}
+//     for(int i=0; i < totalUsuarios; i++){
+//         agregarUsuario(listaUsuarios,usuarios[i]);
+//     }
+//     return listaUsuarios;
+// }
 
 
-bool agregarUsuario(Nodo*& lista,const Usuario& usuario){
-    Nodo* nuevoUsuario = new Nodo();
-    nuevoUsuario->usuario = usuario;
+// bool agregarUsuario(Nodo*& lista,const Usuario& usuario){
+//     Nodo* nuevoUsuario = new Nodo();
+//     nuevoUsuario->usuario = usuario;
 
-    Nodo* aux1 = lista;
-    Nodo* aux2;
+//     Nodo* ptr = lista;
+//     Nodo* fin;
 
-    while(aux1 != NULL){
-        aux2 = aux1;
-        aux1 = aux1->next;
-    }
+//     while(ptr != NULL){
+//         fin = ptr;
+//         ptr = ptr->next;
+//     }
 
-    if(aux1 == lista){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
-        lista = nuevoUsuario;
-    }else{
-        aux2->next = nuevoUsuario;
-    }
+//     if(ptr == lista){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
+//         lista = nuevoUsuario;
+//     }else{
+//         fin->next = nuevoUsuario;
+//     }
 
-    nuevoUsuario->next = aux1;
+//     nuevoUsuario->next = NULL;
 
-    return true;
-}
+//     return true;
+// }
 
 void mostrarUsuarios(Nodo*& lista){
     Nodo* ptr = lista;
@@ -105,4 +104,43 @@ Usuario crearNuevoUsuario(const string& nombreUsuario){
     nuevoUsuario.status = 1;
 
     return nuevoUsuario;
+}
+
+//////
+
+// TODO: Crear lista enlazada
+Nodo* inicializarListaUsuarios(){
+    Usuario usuarios[3] = {
+        {"admin", "123", 1, 1}, 
+        {"vend1", "123", 2, 1}, 
+        {"vend2", "123", 2, 1}
+    };
+    Nodo* head = NULL;
+    for(int i=0; i < totalUsuarios; i++){
+        agregarUsuario(head, usuarios[i]);
+    } 
+    return head;
+}
+
+bool agregarUsuario(Nodo*& head, const Usuario& usuario){
+    Nodo* nuevoUsuario = new Nodo();
+    nuevoUsuario->usuario = usuario;
+
+    Nodo* ptr = head;
+    Nodo* end;
+
+    while(ptr != NULL){
+        end = ptr;
+        ptr = ptr->next;
+    }
+
+    if(ptr == head){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
+        head = nuevoUsuario;
+    }else{
+        end->next = nuevoUsuario;
+    }
+
+    nuevoUsuario->next = NULL;
+
+    return true;
 }
