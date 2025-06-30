@@ -58,7 +58,7 @@ int main(){
 }
 
 void insertarNumeroEnLista(Nodo*& lista, int num){
-    Nodo* nuevo_nodo = new Nodo();
+    Nodo* nuevo_nodo = new(Nodo); // es igual a new Nodo();
     nuevo_nodo->valor = num;
 
     Nodo* aux1 = lista;

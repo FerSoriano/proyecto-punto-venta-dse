@@ -33,10 +33,16 @@ struct Venta{
     int totalProductosVentas = 0;
 };
 
-// Nueva estructura para manejar Usuarios con Nodos
+// Nuevas estructuras para manejar Usuarios y Prodcutos con Nodos
+
 struct NodoUsuario{
     Usuario usuario;
     NodoUsuario* next;
+};
+
+struct NodoProducto{
+    Producto producto;
+    NodoProducto* next;
 };
 
 
@@ -48,13 +54,13 @@ bool validarLogin(int tipoUsuario);
 void validarInput();
 void mostrarInventario();
 void mostrarProductos(int tipoOrden);
-bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden);
-Producto* buscarProducto(const string& nombreProducto);
-NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario);
+Producto crearProducto(int id, string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden);
+NodoProducto* buscarProducto(const string& nombreProducto);
+NodoUsuario* buscarUsuario(string nombreUsuario);
 string convertirMinus(string str);
-bool consultarProducto(Producto* producto);
-bool modificarProducto(Producto* producto, const string& campoModificar, float valor);
-bool bajaProducto(Producto* producto);
+bool consultarProducto(NodoProducto* ptr);
+bool modificarProducto(NodoProducto* ptr, const string& campoModificar, float valor);
+bool bajaProducto(NodoProducto* ptr);
 void mostrarMenuAdminCuentasUsuario();
 void altaUsuario(NodoUsuario* nodo, string nombreUsuario);
 void bajaUsuario(NodoUsuario* nodo, string nombreUsuario);
@@ -68,45 +74,44 @@ void reiniciarVenta(Venta& venta);
 void corteCajaVendedor(const string& vendedor);
 void corteCajaGeneral();
 void limpiarConsola();
-void ordernarNombre();
-void ordernarId();
+void ordernarProductoPorNombre();
+void ordernarProductoPorID();
 void mostrarEncabezadosProducto();
 void mostrarInfoProducto(const Producto& producto);
 void mostrarEncabezadosUsuario();
 void mostrarInfoUsuario(const Usuario& usuario);
 int contarUsuariosAdmin();
 string formatoMoneda(float monto);
-bool reactivarProducto(Producto* producto);
+bool reactivarProducto(NodoProducto* ptr);
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno);
 string solicitarProductoAlUsuario(const string& mensajeEntrada);
-void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
-void menuModificaciones(Producto* producto);
+void solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
+void menuModificaciones(NodoProducto* ptr);
+void inicializarListaUsuarios();
+bool agregarUsuarioLista(const Usuario& usuario);
+void inicializarListaProductos();
+bool agregarProductoLista(const Producto& producto);
 
-// NODOS
-NodoUsuario* inicializarListaUsuarios();
-bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario);
 
 // variables globales
 
-int totalUsuarios = 3;
-int totalProductos = 5;
-Producto productos[100] = {
-    {1,"Agua",13.39,18.55,12,4,1},
-    {2,"Leche",12.35,15.5,16,5,1},
-    {3,"Huevos",22.4,30.39,20,7,1},
-    {4,"Pan",5.5,7.95,18,6,1},
-    {5,"Refresco",10.99,14.75,30,8,1}
-};
+// NODOS USUARIOS
+NodoUsuario* listaUsuarios = NULL;
+NodoUsuario* ultimoUsuario = NULL;
 
+// NODOS PRODUCTOS
+NodoProducto* listaProductos = NULL;
+NodoProducto* ultimoProducto = NULL;
+
+int totalProductos = 0;
 int totalVentas = 0;
 Venta ventas[100];
 
 string currentUser; // manejar al usuario que esta dentro del sistema
 
-NodoUsuario* listaUsuarios = inicializarListaUsuarios();
-
-
 int main(){
+    inicializarListaUsuarios();
+    inicializarListaProductos();
     bool isExcecute = true;
     int optionMenu;
     while (isExcecute){
@@ -131,38 +136,63 @@ int main(){
     return 0;
 }
 
-NodoUsuario* inicializarListaUsuarios(){
+void inicializarListaUsuarios(){
+    int totalUsuarios = 3;
     Usuario usuarios[3] = {
         {"admin", "123", 1, 1}, 
         {"vend1", "123", 2, 1}, 
         {"vend2", "123", 2, 1}
     };
-    NodoUsuario* head = NULL;
     for(int i=0; i < totalUsuarios; i++){
-        agregarUsuarioLista(head, usuarios[i]);
-    } 
-    return head;
+        agregarUsuarioLista(usuarios[i]);
+    }
 }
 
-bool agregarUsuarioLista(NodoUsuario*& head, const Usuario& usuario){
+bool agregarUsuarioLista(const Usuario& usuario){
     NodoUsuario* nuevoUsuario = new NodoUsuario();
     nuevoUsuario->usuario = usuario;
-
-    NodoUsuario* ptr = head;
-    NodoUsuario* end;
-
-    while(ptr != NULL){
-        end = ptr;
-        ptr = ptr->next;
-    }
-
-    if(ptr == head){ // aux siempre sera null, si son iguales significa que la lista esta vacia y se agrega el primer nodo
-        head = nuevoUsuario;
+    
+    if(listaUsuarios == NULL){ // si es NULL se agrega el primer nodo.
+        listaUsuarios = nuevoUsuario;
     }else{
-        end->next = nuevoUsuario;
+        ultimoUsuario->next = nuevoUsuario;
     }
 
     nuevoUsuario->next = NULL;
+    ultimoUsuario = nuevoUsuario;
+
+    return true;
+}
+
+void inicializarListaProductos(){
+    int totalProductos = 5;
+    Producto productos[100] = {
+        {1,"Agua",13.39,18.55,12,4,1},
+        {2,"Leche",12.35,15.5,16,5,1},
+        {3,"Huevos",22.4,30.39,20,7,1},
+        {4,"Pan",5.5,7.95,18,6,1},
+        {5,"Refresco",10.99,14.75,30,8,1}
+    };
+    for(int i=0; i < totalProductos; i++){
+        agregarProductoLista(productos[i]);
+    }
+}
+
+
+bool agregarProductoLista(const Producto& producto){
+    NodoProducto* nuevoProducto = new NodoProducto();
+    nuevoProducto->producto = producto;
+
+    if(listaProductos == NULL){
+        listaProductos = nuevoProducto;
+    }else{
+        ultimoProducto->next = nuevoProducto;
+    }
+
+    nuevoProducto->next = NULL;
+    ultimoProducto = nuevoProducto;
+
+    totalProductos++;
 
     return true;
 }
@@ -191,7 +221,7 @@ void menuAdmin(){
         bool ejecutarMenu = true;
         string nombreProducto;
         float pc, pv;
-        int existencia, nivelReorden;
+        int id, existencia, nivelReorden;
         
         while(ejecutarMenu){
             cout << "\n\t\t\t\t\tUsuario: " << currentUser; //TODO: implementar en todos los menus?
@@ -207,13 +237,13 @@ void menuAdmin(){
                         nombreProducto = solicitarProductoAlUsuario("ALTA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
-                        Producto* producto = buscarProducto(nombreProducto);
-                        if(producto != nullptr){
-                            if(producto->status == 0){
-                                if(reactivarProducto(producto)){
+                        NodoProducto* ptr = buscarProducto(nombreProducto);
+                        if(ptr != NULL){
+                            if(ptr->producto.status == 0){
+                                if(reactivarProducto(ptr)){
                                     mostrarEncabezadosProducto();
-                                    mostrarInfoProducto(*producto);
-                                    cout << "\n\nEl producto " << producto->producto << " se dio de alta nuevamente.\n\n";
+                                    mostrarInfoProducto(ptr->producto);
+                                    cout << "\n\nEl producto " << ptr->producto.producto << " se dio de alta nuevamente.\n\n";
                                 }
                             }else{
                                 cout << "\n\n*** El producto \"" << nombreProducto << "\"  ya existe. Intenta de nuevo. ***\n\n\n";
@@ -225,8 +255,10 @@ void menuAdmin(){
                         pv = solicitarNumeroAlUsuario("Precio venta: ", pc, 99999.99, "\n\n*** El Precio de Venta no puede ser menor al Precio de Compra. Intenta de nuevo. ***\n\n\n", true);
                         existencia = solicitarNumeroAlUsuario("Existencia: ", 00.00, 99999.99, "\n\n*** Error en la cantidad. ***\n\n\n", false);
                         nivelReorden = solicitarNumeroAlUsuario("Nivel de Reorden: ", 00.00, existencia,"\n\n*** El Nivel de Reorden no puede ser mayor que la Existencia. Intenta de nuevo. ***\n\n\n", false);
-
-                        if(altaProducto(nombreProducto,pc,pv,existencia,nivelReorden)){
+                        
+                        id = totalProductos + 1;
+                        Producto nuevoProducto =  crearProducto(id,nombreProducto,pc,pv,existencia,nivelReorden);
+                        if(agregarProductoLista(nuevoProducto)){
                             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
                         }
                     }
@@ -236,9 +268,9 @@ void menuAdmin(){
                         nombreProducto = solicitarProductoAlUsuario("BAJA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
-                        Producto* producto = buscarProducto(nombreProducto);
-                        if(bajaProducto(producto)){
-                            cout << "\nEl producto \"" << producto->producto << "\" se dio de baja\n";
+                        NodoProducto* ptr = buscarProducto(nombreProducto);
+                        if(bajaProducto(ptr)){
+                            cout << "\nEl producto \"" << ptr->producto.producto << "\" se dio de baja\n";
                         }else {
                             cout << "\n\n*** Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; 
                         }
@@ -248,8 +280,8 @@ void menuAdmin(){
                     while (true){
                         nombreProducto = solicitarProductoAlUsuario("CONSULTA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
-                        Producto* producto = buscarProducto(nombreProducto);
-                        if(!consultarProducto(producto)){
+                        NodoProducto* ptr = buscarProducto(nombreProducto);
+                        if(!consultarProducto(ptr)){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                         }
                     }
@@ -259,12 +291,12 @@ void menuAdmin(){
                         nombreProducto = solicitarProductoAlUsuario("MODIFICACIONES");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
                         
-                        Producto* producto = buscarProducto(nombreProducto);
-                        if(producto == nullptr || producto->status == 0){
+                        NodoProducto* ptr = buscarProducto(nombreProducto);
+                        if(ptr == NULL || ptr->producto.status == 0){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                             continue;
                         }
-                        menuModificaciones(producto);        
+                        menuModificaciones(ptr);        
                     }
                     break;
                 case 5:
@@ -294,11 +326,11 @@ string solicitarProductoAlUsuario(const string& mensajeEntrada){
     return nombreProducto;
 }
 
-bool reactivarProducto(Producto* producto){
+bool reactivarProducto(NodoProducto* ptr){
     char res;
     cout << "\nEste producto estaba dado de baja, ¿Quieres darlo de alta nuevamente? (y/n): "; cin >> res; cout << '\n';
     if(tolower(res) == 'y'){
-        producto->status = 1;
+        ptr->producto.status = 1;
         return true;
     }
     return false;
@@ -332,9 +364,9 @@ bool validarLogin(int tipoUsuario){
         cout << "\nPassword: ";
         cin >> pass;
 
-        NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+        NodoUsuario* nodo = buscarUsuario(nombreUsuario);
 
-        if(nodo == nullptr){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; continue; }
+        if(nodo == NULL){ cout << "\n\n*** Usuario o contraseña incorrectos. Intenta de nuevo. ***\n"; continue; }
 
         if (nodo->usuario.usuario == nombreUsuario && nodo->usuario.pass == pass && nodo->usuario.tipo == tipoUsuario && nodo->usuario.status == 1){
             currentUser = nodo->usuario.usuario;
@@ -377,72 +409,89 @@ void mostrarInventario(){
     }
 }
 
-// Bubble Sort
-void ordernarNombre(){
-    Producto tmp;
-    for(int i=0; i < totalProductos - 1; i++){
-        for(int j=0; j < totalProductos - i - 1; j++){
-            if(convertirMinus(productos[j].producto) > convertirMinus(productos[j + 1].producto)){
-                tmp = productos[j];
-                productos[j] = productos[j + 1];
-                productos[j + 1] = tmp;
+// Bubble Sort usando Nodos
+void ordernarProductoPorID(){
+    NodoProducto* aux1 = listaProductos;
+    NodoProducto* aux2;
+
+    while(aux1 != NULL){
+        aux2 = aux1->next;
+        while(aux2 != NULL){
+            if(aux1->producto.id > aux2->producto.id){
+                Producto tmp = aux1->producto;
+                aux1->producto = aux2->producto;
+                aux2->producto = tmp;
             }
+            aux2 = aux2->next;
         }
+        aux1 = aux1->next;
     }
 }
 
-void ordernarId(){
-    Producto tmp;
-    for(int i=0; i < totalProductos - 1; i++){
-        for(int j=0; j < totalProductos - i - 1; j++){
-            if(productos[j].id > productos[j + 1].id){
-                tmp = productos[j];
-                productos[j] = productos[j + 1];
-                productos[j + 1] = tmp;
+void ordernarProductoPorNombre(){
+    NodoProducto* aux1 = listaProductos;
+    NodoProducto* aux2;
+
+    while(aux1 != NULL){
+        aux2 = aux1->next;
+        while(aux2 != NULL){
+            if(convertirMinus(aux1->producto.producto) > convertirMinus(aux2->producto.producto)){
+                Producto tmp = aux1->producto;
+                aux1->producto = aux2->producto;
+                aux2->producto = tmp;
             }
+            aux2 = aux2->next;
         }
+        aux1 = aux1->next;
     }
 }
 
 void mostrarProductos(int tipoOrden){
     if(tipoOrden == 1)
-        ordernarId();
+        ordernarProductoPorID();
     else
-        ordernarNombre();
-    
+        ordernarProductoPorNombre();
     cout << "---------------------------------------------------------------------------------------\n\t\t\t\t\tINVENTARIO\n---------------------------------------------------------------------------------------";
     mostrarEncabezadosProducto();
-    for (int i = 0; i < totalProductos; i++){
-        if(productos[i].status == 1){
-            mostrarInfoProducto(productos[i]);
+    NodoProducto* ptr = listaProductos;
+    while(ptr != NULL){
+        if(ptr->producto.status == 1){
+            mostrarInfoProducto(ptr->producto);
         }
+        ptr = ptr->next;
     }
 }
 
-bool altaProducto(string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden){
-    productos[totalProductos].id = totalProductos + 1;
-    productos[totalProductos].producto = nombreProducto;
-    productos[totalProductos].pc = pc;
-    productos[totalProductos].pv = pv;
-    productos[totalProductos].existencias = existencia;
-    productos[totalProductos].nivelReorden = nivelReorden;
-    productos[totalProductos].status = 1;
-    totalProductos++; // se incrementa en 1 la cantidad de productos.
-    return true;
+Producto crearProducto(int id, string& nombreProducto, float& pc, float& pv, int& existencia, int& nivelReorden){
+    Producto nuevoProducto;
+    nuevoProducto.id = id;
+    nuevoProducto.producto = nombreProducto;
+    nuevoProducto.pc = pc;
+    nuevoProducto.pv = pv;
+    nuevoProducto.existencias = existencia;
+    nuevoProducto.nivelReorden = nivelReorden;
+    nuevoProducto.status = 1;
+    return nuevoProducto;
 }
 
-Producto* buscarProducto(const string& nombreProducto){
-    for(int i = 0; i < totalProductos; i++){
-        if(convertirMinus(productos[i].producto) == convertirMinus(nombreProducto)){
-            return &productos[i];
+
+
+NodoProducto* buscarProducto(const string& nombreProducto){
+    string producto_aux;
+    NodoProducto* ptr = listaProductos;
+    while(ptr != NULL){
+        producto_aux = ptr->producto.producto;
+        if(convertirMinus(producto_aux) == convertirMinus(nombreProducto)){
+            return ptr;
         }
+        ptr = ptr->next;
     }
-    return nullptr;
+    return NULL;
 }
 
-NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario){
+NodoUsuario* buscarUsuario(string nombreUsuario){
     string usuario_aux;
-    NodoUsuario* ptr = lista;
+    NodoUsuario* ptr = listaUsuarios;
     while(ptr != NULL){
         usuario_aux = ptr->usuario.usuario;
         if(convertirMinus(usuario_aux) == convertirMinus(nombreUsuario)){
@@ -450,7 +499,7 @@ NodoUsuario* buscarUsuario(NodoUsuario*& lista, string nombreUsuario){
         }
         ptr = ptr->next;
     }
-    return nullptr;
+    return NULL;
 }
 
 string convertirMinus(string str){
@@ -458,12 +507,12 @@ string convertirMinus(string str){
     return str;
 }
 
-bool consultarProducto(Producto* producto){
-    if(producto == nullptr || producto->status ==0){
+bool consultarProducto(NodoProducto* ptr){
+    if(ptr == NULL || ptr->producto.status ==0){
         return false;
     }
     mostrarEncabezadosProducto();
-    mostrarInfoProducto(*producto);
+    mostrarInfoProducto(ptr->producto);
     return true;
     
 }
@@ -490,29 +539,29 @@ void mostrarInfoProducto(const Producto& producto){
             << resurtir << endl;
 }
 
-void menuModificaciones(Producto* producto){
+void menuModificaciones(NodoProducto* ptr){
     bool mostrarOpciones = true;
     float pc, pv;
     int existencia, nivelReorden, opcion;
     limpiarConsola();
     while(mostrarOpciones){
-            cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< producto->producto << endl;
+            cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< ptr->producto.producto << endl;
             mostrarEncabezadosProducto();
-            mostrarInfoProducto(*producto);
+            mostrarInfoProducto(ptr->producto);
             cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
             cout << "\tOpcion: "; cin >> opcion; validarInput();
             switch(opcion){
                 case 1:
-                    solicitarYActualizarCampoProducto(producto,"Precio de Compra actual: ",producto->pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
+                    solicitarYActualizarCampoProducto(ptr,"Precio de Compra actual: ",ptr->producto.pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
                     break;
                 case 2:
-                    solicitarYActualizarCampoProducto(producto,"Precio de Venta actual: ",producto->pv,"Precio de Venta nuevo: ","pv","Precio de venta actualizado");
+                    solicitarYActualizarCampoProducto(ptr,"Precio de Venta actual: ",ptr->producto.pv,"Precio de Venta nuevo: ","pv","Precio de venta actualizado");
                     break;
                 case 3:
-                    solicitarYActualizarCampoProducto(producto,"Existencias actuales: ",producto->existencias,"Existencias nuevas: ","existencias","Existencias actualizadas");
+                    solicitarYActualizarCampoProducto(ptr,"Existencias actuales: ",ptr->producto.existencias,"Existencias nuevas: ","existencias","Existencias actualizadas");
                     break;
                 case 4:
-                    solicitarYActualizarCampoProducto(producto,"Nivel de reorden actual: ",producto->nivelReorden,"Nivel de reorden nuevo: ","nivelReorden","Nivel de reorden actualizado");
+                    solicitarYActualizarCampoProducto(ptr,"Nivel de reorden actual: ",ptr->producto.nivelReorden,"Nivel de reorden nuevo: ","nivelReorden","Nivel de reorden actualizado");
                     break;
                 case 5:
                     limpiarConsola();
@@ -525,11 +574,11 @@ void menuModificaciones(Producto* producto){
         }
 }
 
-void solicitarYActualizarCampoProducto(Producto* producto, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito){
+void solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito){
     float nuevoValor;
     cout << "\n" << textoActual << valorActual;
     cout << "\n" << textoNuevo; cin >> nuevoValor; validarInput();
-    if(modificarProducto(producto, campoModificar, nuevoValor)){
+    if(modificarProducto(ptr, campoModificar, nuevoValor)){
         limpiarConsola();
         cout << "\n\n"<< textoExito <<"\n\n";
     }else{
@@ -537,34 +586,34 @@ void solicitarYActualizarCampoProducto(Producto* producto, const string&textoAct
     }
 }
 
-bool modificarProducto(Producto* producto, const string& campoModificar, float valor){
+bool modificarProducto(NodoProducto* ptr, const string& campoModificar, float valor){
     if(valor <= 0){ return false; }
 
     if(campoModificar == "pc"){
-        producto->pc = valor;
+        ptr->producto.pc = valor;
         return true;
     }
     if(campoModificar == "pv"){
-        producto->pv = valor;
+        ptr->producto.pv = valor;
         return true;
     }
     if(campoModificar == "existencias"){
-        producto->existencias = valor;
+        ptr->producto.existencias = valor;
         return true;
     }
     if(campoModificar == "nivelReorden"){
-        producto->nivelReorden = valor;
+        ptr->producto.nivelReorden = valor;
         return true;
     }
     
     return false; // en dado caso que no entre en ninguna opcion.
 }
 
-bool bajaProducto(Producto* producto){
-    if(producto == nullptr || producto->status == 0){
+bool bajaProducto(NodoProducto* ptr){
+    if(ptr == NULL || ptr->producto.status == 0){
         return false;
     }
-    producto->status = 0;
+    ptr->producto.status = 0;
     return true;
 }
 
@@ -586,7 +635,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tALTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     altaUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -595,7 +644,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tBAJA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario); // TODO: validar si es necesario pasar la lista por parametro.
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     bajaUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -604,7 +653,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tCONSULTA USUARIO\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     consultarUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -613,7 +662,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     cout << "\n\n\tMODIFICACIONES\n\n";
                     cout << "Usuario: "; cin >> nombreUsuario;
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
-                    NodoUsuario* nodo = buscarUsuario(listaUsuarios, nombreUsuario);
+                    NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     modificarUsuario(nodo, nombreUsuario);
                 }
                 break;
@@ -634,7 +683,7 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
     string pass;
     int tipoUsuario;
     
-    if(nodo == nullptr){
+    if(nodo == NULL){
         cout << "Contraseña: "; cin >> pass;
         do{
             cout << "Tipo (1 admin / 2 vendedor): "; cin >> tipoUsuario; validarInput();
@@ -649,12 +698,12 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
         nuevoUsuario.status = 1;
         
         // se agrega el usuario.
-        agregarUsuarioLista(listaUsuarios, nuevoUsuario);
-        totalUsuarios++; // se incrementa en 1 la cantidad de usuarios.
-        
-        string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
-        cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
-        return;
+        if(agregarUsuarioLista(nuevoUsuario)){
+            string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
+            cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
+            return;
+        }
+        cout << "\n\n*** Error inesperado ***\n\n";
     }
     if(nodo->usuario.status == 1){
         cout << "\n\n*** El usuario \"" << nodo->usuario.usuario << "\" ya existe. Intenta de nuevo. ***\n\n"; 
@@ -672,7 +721,7 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
 }
 
 void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n";
         return;
     }
@@ -705,7 +754,7 @@ int contarUsuariosAdmin(){
 }
 
 void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n***Usuario \"" << nombreUsuario << "\" no encontrado. Intenta de nuevo. ***\n\n";
         return;
     }
@@ -775,7 +824,7 @@ void mostrarInfoUsuario(const Usuario& usuario){
 
 
 void consultarUsuario(NodoUsuario* nodo, string nombreUsuario){
-    if(nodo == nullptr || nodo->usuario.status == 0){
+    if(nodo == NULL || nodo->usuario.status == 0){
         cout << "\n\n*** No se encontro el usuario \"" << nombreUsuario << "\" ***\n\n";
         return;
     }
@@ -800,7 +849,7 @@ void mostrarCuentasUsuarios(){
 void hacerVenta(){
     if (validarLogin(2)){
         limpiarConsola();
-        Producto* producto;
+        NodoProducto* ptr;
         Venta ventaActual;
         string nombreProducto;
         int cantidad;
@@ -825,35 +874,35 @@ void hacerVenta(){
                 break;
             }
 
-            producto = buscarProducto(nombreProducto);
+            ptr = buscarProducto(nombreProducto);
             // validamos que el producto exista o no este dado de baja
-            if(producto == nullptr || producto->status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
+            if(ptr == NULL || ptr->producto.status == 0){ cout << "\n\n*** No se encontro el producto. Intenta de nuevo ***\n\n"; continue; }
             // validamos que tengan existencias
-            if(producto->existencias <= 0){ cout << "\n\n*** El producto no tiene existencia. Intenta de nuevo ***\n\n"; continue; }
+            if(ptr->producto.existencias <= 0){ cout << "\n\n*** El producto no tiene existencia. Intenta de nuevo ***\n\n"; continue; }
 
             cout << "Cantidad: "; cin >> cantidad; validarInput();
             if(cantidad <= 0){cout << "\n\n*** Cantidad invalida. Intenta de nuevo ***\n\n"; continue;}
 
             // validamos que tengamos las existencias que solicita el cliente
-            if(producto->existencias < cantidad){
+            if(ptr->producto.existencias < cantidad){
                 string resp;
-                cout << "\n\nNo hay " << cantidad << ", solo hay " << producto->existencias << ", ¿realizar la venta de " << producto->existencias << "? ('Y' para aceptar / cualquiera para omitir): ";
+                cout << "\n\nNo hay " << cantidad << ", solo hay " << ptr->producto.existencias << ", ¿realizar la venta de " << ptr->producto.existencias << "? ('Y' para aceptar / cualquiera para omitir): ";
                 cin >> resp;
                 if( convertirMinus(resp) != "y") { cout << "\n"; continue; }
-                cantidad = producto->existencias;
-                cout << "Se agregaron " << producto->existencias << endl;
+                cantidad = ptr->producto.existencias;
+                cout << "Se agregaron " << ptr->producto.existencias << endl;
             }
             
             // creamos la venta dentro de la estructura de Ventas
             ventaActual.vendedor = currentUser; // vendedor loggeado
-            ventaActual.productos[ventaActual.totalProductosVentas] = producto->producto; // nombre del producto
+            ventaActual.productos[ventaActual.totalProductosVentas] = ptr->producto.producto; // nombre del producto
             ventaActual.cantidad[ventaActual.totalProductosVentas] = cantidad;
-            ventaActual.pc[ventaActual.totalProductosVentas] = producto->pc;
-            ventaActual.pv[ventaActual.totalProductosVentas] = producto->pv;
+            ventaActual.pc[ventaActual.totalProductosVentas] = ptr->producto.pc;
+            ventaActual.pv[ventaActual.totalProductosVentas] = ptr->producto.pv;
             ventaActual.totalProductosVentas++;
 
             // Restar producto al inventario
-            restarInventario(producto->id, cantidad);
+            ptr->producto.existencias -= cantidad;
 
             cout << "\n";
         }
@@ -879,7 +928,7 @@ void imprimirTicket(const Venta& venta){
                 << setw(20) << formatoMoneda(venta.pv[i])
                 << formatoMoneda(subtotal) << endl;
     }
-    cout << "\n\t\t\t\t     Total: $" << total << "\n\n-------------------------------------------------------\n\n";
+    cout << "\n\t\t\t\t\tTotal: $" << total << "\n\n-------------------------------------------------------\n\n";
 }
 
 string formatoMoneda(float monto){
@@ -899,14 +948,6 @@ void reiniciarVenta(Venta& venta) {
     venta.totalProductosVentas = 0;
 }
 
-void restarInventario(const int& id, const int& cantidad){
-    for(int i=0; i<totalProductos; i++){
-        if(productos[i].id == id){
-            productos[i].existencias -= cantidad;
-            break;
-        }
-    }
-}
 
 void corteCajaVendedor(const string& vendedor){
     float ingresos = 0, egresos = 0;
