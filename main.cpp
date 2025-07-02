@@ -2,6 +2,8 @@
 #include <string>
 #include <iomanip> // uso de setw()
 #include <sstream>
+#include <fstream> // manejo de archivos
+#include <cstdio> // remove y rename archivos
 
 using namespace std;
 
@@ -87,11 +89,13 @@ float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorM
 string solicitarProductoAlUsuario(const string& mensajeEntrada);
 void solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
 void menuModificaciones(NodoProducto* ptr);
-void inicializarListaUsuarios();
+void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefault);
 bool agregarUsuarioLista(const Usuario& usuario);
-void inicializarListaProductos();
+void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDefault);
 bool agregarProductoLista(const Producto& producto);
-
+// archivos
+bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
+bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
 
 // variables globales
 
@@ -110,8 +114,16 @@ Venta ventas[100];
 string currentUser; // manejar al usuario que esta dentro del sistema
 
 int main(){
-    inicializarListaUsuarios();
-    inicializarListaProductos();
+
+    string rutaArchivoUsuarios = "usuarios.dat";
+    string rutaArchivoProductos = "productos.dat";
+
+    bool crearArchivoUsuariosDefault = false;
+    bool crearArchivoProductosDefault = false;
+
+    inicializarListaUsuarios(rutaArchivoUsuarios, crearArchivoUsuariosDefault);
+    inicializarListaProductos(rutaArchivoProductos, crearArchivoProductosDefault);
+
     bool isExcecute = true;
     int optionMenu;
     while (isExcecute){
@@ -136,15 +148,40 @@ int main(){
     return 0;
 }
 
-void inicializarListaUsuarios(){
+bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario){
+    ofstream archivo(rutaArchivo, ios::binary | ios::app);
+    if(!archivo.is_open()){
+        return false;
+    }
+    archivo.write((char*)&usuario, sizeof(Usuario));
+    archivo.close();
+    return true;
+}
+
+void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefault){
     int totalUsuarios = 3;
     Usuario usuarios[3] = {
         {"admin", "123", 1, 1}, 
         {"vend1", "123", 2, 1}, 
         {"vend2", "123", 2, 1}
     };
-    for(int i=0; i < totalUsuarios; i++){
-        agregarUsuarioLista(usuarios[i]);
+
+    if(crearArchivoUsuariosDefault){
+        remove(rutaArchivo.c_str()); // si existe el archivo, lo elimina.
+        for(int i=0; i < totalUsuarios; i++){
+            agregarUsuarioLista(usuarios[i]);
+            agregarUsuarioAlArchivo(rutaArchivo, usuarios[i]);
+        }
+    } else {
+        ifstream archivo(rutaArchivo, ios::binary);
+        Usuario bufferUsuario;
+        while(!archivo.eof() && !archivo.fail()){
+            archivo.read((char*)&bufferUsuario, sizeof(Usuario));
+            if(archivo.good()){
+                agregarUsuarioLista(bufferUsuario);
+            } 
+        }
+        archivo.close();
     }
 }
 
@@ -164,7 +201,17 @@ bool agregarUsuarioLista(const Usuario& usuario){
     return true;
 }
 
-void inicializarListaProductos(){
+bool agregarProductoAlArchivo(string rutaArchivo, Producto producto){
+    ofstream archivo(rutaArchivo, ios::binary | ios::app);
+    if(!archivo.is_open()){
+        return false;
+    }
+    archivo.write((char*)&producto, sizeof(Producto));
+    archivo.close();
+    return true;
+}
+
+void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDefault){
     int totalProductos = 5;
     Producto productos[100] = {
         {1,"Agua",13.39,18.55,12,4,1},
@@ -173,11 +220,24 @@ void inicializarListaProductos(){
         {4,"Pan",5.5,7.95,18,6,1},
         {5,"Refresco",10.99,14.75,30,8,1}
     };
-    for(int i=0; i < totalProductos; i++){
-        agregarProductoLista(productos[i]);
+
+    if(crearArchivoProductosDefault){
+        for(int i=0; i < totalProductos; i++){
+            agregarProductoLista(productos[i]);
+            agregarProductoAlArchivo(rutaArchivo, productos[i]);
+        }
+    } else {
+        ifstream archivo(rutaArchivo, ios::binary);
+        Producto bufferProducto;
+        while(!archivo.eof() && !archivo.fail()){
+            archivo.read((char*)&bufferProducto, sizeof(Producto));
+            if(archivo.good()){
+                agregarProductoLista(bufferProducto);
+            } 
+        }
+        archivo.close();
     }
 }
-
 
 bool agregarProductoLista(const Producto& producto){
     NodoProducto* nuevoProducto = new NodoProducto();
