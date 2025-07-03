@@ -113,10 +113,11 @@ Venta ventas[100];
 
 string currentUser; // manejar al usuario que esta dentro del sistema
 
+string rutaArchivoUsuarios = "usuarios.dat";
+string rutaArchivoProductos = "productos.dat";
+
 int main(){
 
-    string rutaArchivoUsuarios = "usuarios.dat";
-    string rutaArchivoProductos = "productos.dat";
 
     bool crearArchivoUsuariosDefault = false;
     bool crearArchivoProductosDefault = false;
@@ -222,6 +223,7 @@ void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDef
     };
 
     if(crearArchivoProductosDefault){
+        remove(rutaArchivo.c_str());
         for(int i=0; i < totalProductos; i++){
             agregarProductoLista(productos[i]);
             agregarProductoAlArchivo(rutaArchivo, productos[i]);
@@ -318,8 +320,10 @@ void menuAdmin(){
                         
                         id = totalProductos + 1;
                         Producto nuevoProducto =  crearProducto(id,nombreProducto,pc,pv,existencia,nivelReorden);
-                        if(agregarProductoLista(nuevoProducto)){
+                        if(agregarProductoLista(nuevoProducto) && agregarProductoAlArchivo(rutaArchivoProductos, nuevoProducto)){
                             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
+                        } else {
+                            cout << "\n\n*** Error inesperado al agregar el producto. ***\n\n";
                         }
                     }
                     break;
@@ -758,12 +762,12 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
         nuevoUsuario.status = 1;
         
         // se agrega el usuario.
-        if(agregarUsuarioLista(nuevoUsuario)){
+        if(agregarUsuarioLista(nuevoUsuario) && agregarUsuarioAlArchivo(rutaArchivoUsuarios,nuevoUsuario)){
             string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
             cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
             return;
         }
-        cout << "\n\n*** Error inesperado ***\n\n";
+        cout << "\n\n*** Error inesperado al agregar el Usuario ***\n\n";
     }
     if(nodo->usuario.status == 1){
         cout << "\n\n*** El usuario \"" << nodo->usuario.usuario << "\" ya existe. Intenta de nuevo. ***\n\n"; 
