@@ -402,12 +402,13 @@ bool reactivarProducto(NodoProducto* ptr){
 
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno){
     float valor;
-    if(!cambiarSigno)
+    if(!cambiarSigno){
         do{
             cout << mensajeEntrada; cin >> valor; validarInput();
             if(valor <= valorMin){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; continue; }
             if(valor > valorMax){ cout << mensajeError; }
         }while(valor <= valorMin || valor > valorMax);
+    }
     else{
         do{
             cout << mensajeEntrada; cin >> valor; validarInput();
