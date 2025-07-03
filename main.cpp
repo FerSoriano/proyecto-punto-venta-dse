@@ -71,7 +71,6 @@ void consultarUsuario(NodoUsuario* nodo, string nombreUsuario);
 void mostrarCuentasUsuarios();
 void hacerVenta();
 void imprimirTicket(const Venta& venta);
-void restarInventario(const int& id, const int& cantidad);
 void reiniciarVenta(Venta& venta);
 void corteCajaVendedor(const string& vendedor);
 void corteCajaGeneral();
