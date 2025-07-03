@@ -269,8 +269,11 @@ void limpiarConsola(){
 int menuPrincipal(){
     int option;
     cout << "\n\n\tMENU PRINCIPAL\n\n";
-    cout << "1. Administrador\n2. Ventas\n3. Salir\n\n";
-    cout << "\tOpcion: "; cin >> option;
+        cout << "1. Administrador" <<
+        "\n2. Ventas" <<
+        "\n3. Salir\n\n" << 
+        "\tOpcion: ";
+    cin >> option;
     validarInput();
     return option;
 }
@@ -287,8 +290,15 @@ void menuAdmin(){
         while(ejecutarMenu){
             cout << "\n\t\t\t\t\tUsuario: " << currentUser; //TODO: implementar en todos los menus?
             cout << "\n\n\tMENU ADMINISTRADOR\n\n";
-            cout << "1. Altas\n2. Bajas\n3. Consultas\n4. Modificaciones\n5. Mostrar Inventario\n6. Administracion de Cuentas de Usuario\n7. Corte de caja general\n8. Regresar al menu anterior.\n\n";
-            cout << "\tOpcion: ";
+            cout << "1. Altas" << 
+                "\n2. Bajas" << 
+                "\n3. Consultas" << 
+                "\n4. Modificaciones" << 
+                "\n5. Mostrar Inventario" << 
+                "\n6. Administracion de Cuentas de Usuario" << 
+                "\n7. Corte de caja general" << 
+                "\n8. Regresar al menu anterior.\n\n" << 
+                "\tOpcion: ";
             cin >> option;
             validarInput();
             limpiarConsola();
@@ -612,8 +622,13 @@ void menuModificaciones(NodoProducto* ptr){
             cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< ptr->producto.producto << endl;
             mostrarEncabezadosProducto();
             mostrarInfoProducto(ptr->producto);
-            cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
-            cout << "\tOpcion: "; cin >> opcion; validarInput();
+            cout << "\n1. Precio de compra" << 
+                "\n2. Precio de venta" <<
+                "\n3. Existencias" <<
+                "\n4. Nidel de reorden" <<
+                "\n5. Regresar al menu anterior" <<
+                "\n\n\tOpcion: "; 
+            cin >> opcion; validarInput();
             switch(opcion){
                 case 1:
                     solicitarYActualizarCampoProducto(ptr,"Precio de Compra actual: ",ptr->producto.pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
@@ -688,8 +703,13 @@ void mostrarMenuAdminCuentasUsuario(){
 
     while(ejecutarMenu){
         cout << "\n\n\tMENU ADMINISTRACION DE CUENTAS DE USUARIOS\n\n";
-        cout << "1. Altas\n2. Bajas\n3. Consultas\n4. Modificaciones\n5. Mostrar cuentas de usuarios\n6. Regresar al menu anterior.\n\n";
-        cout << "\tOpcion: ";
+        cout << "1. Altas" <<
+            "\n2. Bajas" <<
+            "\n3. Consultas" <<
+            "\n4. Modificaciones" <<
+            "\n5. Mostrar cuentas de usuarios" <<
+            "\n6. Regresar al menu anterior.\n\n" << 
+            "\tOpcion: ";
         cin >> option;
         validarInput();
         limpiarConsola();
@@ -830,8 +850,11 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
         cout << "\n\n\tMODIFICACIONES\n\nUsuario: "<< nombreUsuario << endl;
         mostrarEncabezadosUsuario();
         mostrarInfoUsuario(nodo->usuario);
-        cout << "\n1. Contraseña\n2. Tipo\n3. Regresar al menu anterior\n\n";
-        cout << "\tOpcion: "; cin >> opcion; validarInput();
+        cout << "\n1. Contraseña" <<
+            "\n2. Tipo" <<
+            "\n3. Regresar al menu anterior\n\n" <<
+            "\n\n\tOpcion: ";
+        cin >> opcion; validarInput();
         switch(opcion){
             case 1:
             cout << "\nContraseña actual: "<< nodo->usuario.pass;
