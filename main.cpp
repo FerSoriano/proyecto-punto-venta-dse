@@ -71,7 +71,6 @@ void consultarUsuario(NodoUsuario* nodo, string nombreUsuario);
 void mostrarCuentasUsuarios();
 void hacerVenta();
 void imprimirTicket(const Venta& venta);
-void restarInventario(const int& id, const int& cantidad);
 void reiniciarVenta(Venta& venta);
 void corteCajaVendedor(const string& vendedor);
 void corteCajaGeneral();
@@ -113,10 +112,11 @@ Venta ventas[100];
 
 string currentUser; // manejar al usuario que esta dentro del sistema
 
+string rutaArchivoUsuarios = "usuarios.dat";
+string rutaArchivoProductos = "productos.dat";
+
 int main(){
 
-    string rutaArchivoUsuarios = "usuarios.dat";
-    string rutaArchivoProductos = "productos.dat";
 
     bool crearArchivoUsuariosDefault = false;
     bool crearArchivoProductosDefault = false;
@@ -222,6 +222,7 @@ void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDef
     };
 
     if(crearArchivoProductosDefault){
+        remove(rutaArchivo.c_str());
         for(int i=0; i < totalProductos; i++){
             agregarProductoLista(productos[i]);
             agregarProductoAlArchivo(rutaArchivo, productos[i]);
@@ -268,8 +269,11 @@ void limpiarConsola(){
 int menuPrincipal(){
     int option;
     cout << "\n\n\tMENU PRINCIPAL\n\n";
-    cout << "1. Administrador\n2. Ventas\n3. Salir\n\n";
-    cout << "\tOpcion: "; cin >> option;
+        cout << "1. Administrador" <<
+        "\n2. Ventas" <<
+        "\n3. Salir\n\n" << 
+        "\tOpcion: ";
+    cin >> option;
     validarInput();
     return option;
 }
@@ -286,8 +290,15 @@ void menuAdmin(){
         while(ejecutarMenu){
             cout << "\n\t\t\t\t\tUsuario: " << currentUser; //TODO: implementar en todos los menus?
             cout << "\n\n\tMENU ADMINISTRADOR\n\n";
-            cout << "1. Altas\n2. Bajas\n3. Consultas\n4. Modificaciones\n5. Mostrar Inventario\n6. Administracion de Cuentas de Usuario\n7. Corte de caja general\n8. Regresar al menu anterior.\n\n";
-            cout << "\tOpcion: ";
+            cout << "1. Altas" << 
+                "\n2. Bajas" << 
+                "\n3. Consultas" << 
+                "\n4. Modificaciones" << 
+                "\n5. Mostrar Inventario" << 
+                "\n6. Administracion de Cuentas de Usuario" << 
+                "\n7. Corte de caja general" << 
+                "\n8. Regresar al menu anterior.\n\n" << 
+                "\tOpcion: ";
             cin >> option;
             validarInput();
             limpiarConsola();
@@ -318,8 +329,10 @@ void menuAdmin(){
                         
                         id = totalProductos + 1;
                         Producto nuevoProducto =  crearProducto(id,nombreProducto,pc,pv,existencia,nivelReorden);
-                        if(agregarProductoLista(nuevoProducto)){
+                        if(agregarProductoLista(nuevoProducto) && agregarProductoAlArchivo(rutaArchivoProductos, nuevoProducto)){
                             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
+                        } else {
+                            cout << "\n\n*** Error inesperado al agregar el producto. ***\n\n";
                         }
                     }
                     break;
@@ -398,12 +411,13 @@ bool reactivarProducto(NodoProducto* ptr){
 
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno){
     float valor;
-    if(!cambiarSigno)
+    if(!cambiarSigno){
         do{
             cout << mensajeEntrada; cin >> valor; validarInput();
             if(valor <= valorMin){ cout << "\n\n*** Datos invalidos. Intenta de nuevo. ***\n\n\n"; continue; }
             if(valor > valorMax){ cout << mensajeError; }
         }while(valor <= valorMin || valor > valorMax);
+    }
     else{
         do{
             cout << mensajeEntrada; cin >> valor; validarInput();
@@ -608,8 +622,13 @@ void menuModificaciones(NodoProducto* ptr){
             cout << "\n\n\tMODIFICACIONES\n\nProducto: "<< ptr->producto.producto << endl;
             mostrarEncabezadosProducto();
             mostrarInfoProducto(ptr->producto);
-            cout << "\n1. Precio de compra\n2. Precio de venta\n3. Existencias\n4. Nidel de reorden\n5. Regresar al menu anterior\n\n";
-            cout << "\tOpcion: "; cin >> opcion; validarInput();
+            cout << "\n1. Precio de compra" << 
+                "\n2. Precio de venta" <<
+                "\n3. Existencias" <<
+                "\n4. Nidel de reorden" <<
+                "\n5. Regresar al menu anterior" <<
+                "\n\n\tOpcion: "; 
+            cin >> opcion; validarInput();
             switch(opcion){
                 case 1:
                     solicitarYActualizarCampoProducto(ptr,"Precio de Compra actual: ",ptr->producto.pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
@@ -684,8 +703,13 @@ void mostrarMenuAdminCuentasUsuario(){
 
     while(ejecutarMenu){
         cout << "\n\n\tMENU ADMINISTRACION DE CUENTAS DE USUARIOS\n\n";
-        cout << "1. Altas\n2. Bajas\n3. Consultas\n4. Modificaciones\n5. Mostrar cuentas de usuarios\n6. Regresar al menu anterior.\n\n";
-        cout << "\tOpcion: ";
+        cout << "1. Altas" <<
+            "\n2. Bajas" <<
+            "\n3. Consultas" <<
+            "\n4. Modificaciones" <<
+            "\n5. Mostrar cuentas de usuarios" <<
+            "\n6. Regresar al menu anterior.\n\n" << 
+            "\tOpcion: ";
         cin >> option;
         validarInput();
         limpiarConsola();
@@ -758,12 +782,12 @@ void altaUsuario(NodoUsuario* nodo, string nombreUsuario){
         nuevoUsuario.status = 1;
         
         // se agrega el usuario.
-        if(agregarUsuarioLista(nuevoUsuario)){
+        if(agregarUsuarioLista(nuevoUsuario) && agregarUsuarioAlArchivo(rutaArchivoUsuarios,nuevoUsuario)){
             string tipoUsuarioStr = (tipoUsuario == 2) ? "Vendedor" : "Admin";
             cout << "\n\nEl Usuario \"" << nombreUsuario << "\" se agrego correctamente como " << tipoUsuarioStr << ".\n\n";
             return;
         }
-        cout << "\n\n*** Error inesperado ***\n\n";
+        cout << "\n\n*** Error inesperado al agregar el Usuario ***\n\n";
     }
     if(nodo->usuario.status == 1){
         cout << "\n\n*** El usuario \"" << nodo->usuario.usuario << "\" ya existe. Intenta de nuevo. ***\n\n"; 
@@ -826,8 +850,11 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
         cout << "\n\n\tMODIFICACIONES\n\nUsuario: "<< nombreUsuario << endl;
         mostrarEncabezadosUsuario();
         mostrarInfoUsuario(nodo->usuario);
-        cout << "\n1. Contraseña\n2. Tipo\n3. Regresar al menu anterior\n\n";
-        cout << "\tOpcion: "; cin >> opcion; validarInput();
+        cout << "\n1. Contraseña" <<
+            "\n2. Tipo" <<
+            "\n3. Regresar al menu anterior\n\n" <<
+            "\n\n\tOpcion: ";
+        cin >> opcion; validarInput();
         switch(opcion){
             case 1:
             cout << "\nContraseña actual: "<< nodo->usuario.pass;
