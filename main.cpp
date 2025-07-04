@@ -336,13 +336,14 @@ void menuAdmin(){
                         }
                     }
                     break;
-                case 2: // baja           
+                case 2: // baja
+                // TODO: el borrado del archivo sera fisico, mientras se ejecute la app se podra dar de alta nuevamente.
                     while(true){
                         nombreProducto = solicitarProductoAlUsuario("BAJA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
                         NodoProducto* ptr = buscarProducto(nombreProducto);
-                        if(bajaProducto(ptr)){
+                        if(bajaProducto(ptr)){ //TODO: Agregar funcion eliminarDelArchivo
                             cout << "\nEl producto \"" << ptr->producto.producto << "\" se dio de baja\n";
                         }else {
                             cout << "\n\n*** Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; 
@@ -369,7 +370,8 @@ void menuAdmin(){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                             continue;
                         }
-                        menuModificaciones(ptr);        
+                        menuModificaciones(ptr); //TODO: Crear if, si se cumple se modifica el archivo
+                        //TODO: Pendiente crear funcion para modificar elemento en el archivo.
                     }
                     break;
                 case 5:
@@ -613,7 +615,7 @@ void mostrarInfoProducto(const Producto& producto){
             << resurtir << endl;
 }
 
-void menuModificaciones(NodoProducto* ptr){
+void menuModificaciones(NodoProducto* ptr){ //TODO: Modificar para que retorne True si se modifico el usuario. Cambiar nombre a modificarUsuario?
     bool mostrarOpciones = true;
     float pc, pv;
     int existencia, nivelReorden, opcion;
@@ -721,6 +723,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     altaUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de altaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 2:
@@ -730,6 +733,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     bajaUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de bajaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 3:
@@ -748,6 +752,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     modificarUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de modidicarUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 5:
@@ -824,6 +829,7 @@ void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
     }
 
     nodo->usuario.status = 0; 
+    //TODO: Llamar a funcion para eliminar usuario del archivo.
     cout << "\nEl usuario \"" << nodo->usuario.usuario << "\" se dio de baja\n";
 }
 
