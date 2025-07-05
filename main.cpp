@@ -95,6 +95,7 @@ bool agregarProductoLista(const Producto& producto);
 // archivos
 bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
 bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
+bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminado);
 
 // variables globales
 
@@ -312,6 +313,9 @@ void menuAdmin(){
                         if(ptr != NULL){
                             if(ptr->producto.status == 0){
                                 if(reactivarProducto(ptr)){
+                                    if(!agregarProductoAlArchivo(rutaArchivoProductos, ptr->producto)){
+                                        cout << "\n\n*** Error inesperado al agregar el producto. ***\n\n";
+                                    }
                                     mostrarEncabezadosProducto();
                                     mostrarInfoProducto(ptr->producto);
                                     cout << "\n\nEl producto " << ptr->producto.producto << " se dio de alta nuevamente.\n\n";
@@ -343,7 +347,10 @@ void menuAdmin(){
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
                         NodoProducto* ptr = buscarProducto(nombreProducto);
-                        if(bajaProducto(ptr)){ //TODO: Agregar funcion eliminarDelArchivo
+                        if(bajaProducto(ptr)){
+                            if(!eliminarProductoDelArchivo(rutaArchivoProductos,ptr->producto.producto)){
+                                cout << "\n\n*** ERROR: No se pudo eliminar el producto en el archivo. ***\n\n";
+                            }
                             cout << "\nEl producto \"" << ptr->producto.producto << "\" se dio de baja\n";
                         }else {
                             cout << "\n\n*** Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; 
@@ -696,6 +703,38 @@ bool bajaProducto(NodoProducto* ptr){
     }
     ptr->producto.status = 0;
     return true;
+}
+
+bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminar){
+    string tmp = "tmp.dat";
+    ifstream archivoActual(rutaArchivo, ios::binary);
+    ofstream tmpFile(tmp, ios::binary | ios::out);
+
+    bool productoEliminado = false;
+    Producto bufferProdcuto;
+
+    while(!archivoActual.eof()){
+        archivoActual.read((char*)&bufferProdcuto, sizeof(Producto));
+        if(archivoActual.good()){
+            if(nombreProductoEliminar == bufferProdcuto.producto){
+                productoEliminado = true;
+                continue;
+            }
+            tmpFile.write((char*)&bufferProdcuto, sizeof(Producto));
+        }
+    }
+
+    archivoActual.close();
+    tmpFile.close();
+
+    if(productoEliminado){
+        remove(rutaArchivo.c_str()); // Convertir string a const char*
+        rename(tmp.c_str(), rutaArchivo.c_str());
+        return true;
+    }
+    remove(tmp.c_str());
+    return false;
+
 }
 
 void mostrarMenuAdminCuentasUsuario(){
