@@ -86,8 +86,8 @@ string formatoMoneda(float monto);
 bool reactivarProducto(NodoProducto* ptr);
 float solicitarNumeroAlUsuario(const string& mensajeEntrada, const float& valorMin,const float& valorMax, const string& mensajeError, bool cambiarSigno);
 string solicitarProductoAlUsuario(const string& mensajeEntrada);
-void solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
-void menuModificaciones(NodoProducto* ptr);
+bool solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito);
+bool menuModificaciones(NodoProducto* ptr);
 void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefault);
 bool agregarUsuarioLista(const Usuario& usuario);
 void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDefault);
@@ -97,6 +97,7 @@ void setUltimoProductoID(int id);
 bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
 bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
 bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminado);
+bool actualizarArchivoProductos(string rutaArchivo);
 
 // variables globales
 
@@ -268,6 +269,24 @@ void setUltimoProductoID(int id){
     }
 }
 
+bool actualizarArchivoProductos(string rutaArchivo){
+    ofstream archivo(rutaArchivo, ios::binary | ios::out); // sobreescribe el archivo
+    if(!archivo.is_open()){
+        return false;
+    }
+
+    NodoProducto* ptr = listaProductos;
+    Producto producto;
+    while(ptr != NULL){
+        producto = ptr->producto;
+        archivo.write((char*)&producto, sizeof(Producto));
+        ptr = ptr->next;
+    }
+    
+    archivo.close();
+    return true;
+}
+
 void limpiarConsola(){
     #ifdef _WIN32
         system("cls"); // Windows
@@ -350,7 +369,6 @@ void menuAdmin(){
                     }
                     break;
                 case 2: // baja
-                // TODO: el borrado del archivo sera fisico, mientras se ejecute la app se podra dar de alta nuevamente.
                     while(true){
                         nombreProducto = solicitarProductoAlUsuario("BAJA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
@@ -386,8 +404,11 @@ void menuAdmin(){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                             continue;
                         }
-                        menuModificaciones(ptr); //TODO: Crear if, si se cumple se modifica el archivo
-                        //TODO: Pendiente crear funcion para modificar elemento en el archivo.
+                        if(menuModificaciones(ptr)){
+                            if(!actualizarArchivoProductos(rutaArchivoProductos)){
+                                cout << "\n\n*** ERROR: No se pudo actualizar el archivo Productos ***\n\n";
+                            }
+                        }
                     }
                     break;
                 case 5:
@@ -631,8 +652,8 @@ void mostrarInfoProducto(const Producto& producto){
             << resurtir << endl;
 }
 
-void menuModificaciones(NodoProducto* ptr){ //TODO: Modificar para que retorne True si se modifico el usuario. Cambiar nombre a modificarUsuario?
-    bool mostrarOpciones = true;
+bool menuModificaciones(NodoProducto* ptr){
+    bool mostrarOpciones = true, productoModificado = false;
     float pc, pv;
     int existencia, nivelReorden, opcion;
     limpiarConsola();
@@ -649,16 +670,24 @@ void menuModificaciones(NodoProducto* ptr){ //TODO: Modificar para que retorne T
             cin >> opcion; validarInput();
             switch(opcion){
                 case 1:
-                    solicitarYActualizarCampoProducto(ptr,"Precio de Compra actual: ",ptr->producto.pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado");
+                    if(solicitarYActualizarCampoProducto(ptr,"Precio de Compra actual: ",ptr->producto.pc,"Precio de Compra nuevo: ","pc","Precio de compra actualizado")){
+                        productoModificado = true;
+                    }
                     break;
                 case 2:
-                    solicitarYActualizarCampoProducto(ptr,"Precio de Venta actual: ",ptr->producto.pv,"Precio de Venta nuevo: ","pv","Precio de venta actualizado");
+                    if(solicitarYActualizarCampoProducto(ptr,"Precio de Venta actual: ",ptr->producto.pv,"Precio de Venta nuevo: ","pv","Precio de venta actualizado")){
+                        productoModificado = true;
+                    }
                     break;
                 case 3:
-                    solicitarYActualizarCampoProducto(ptr,"Existencias actuales: ",ptr->producto.existencias,"Existencias nuevas: ","existencias","Existencias actualizadas");
+                    if(solicitarYActualizarCampoProducto(ptr,"Existencias actuales: ",ptr->producto.existencias,"Existencias nuevas: ","existencias","Existencias actualizadas")){
+                        productoModificado = true;
+                    }
                     break;
                 case 4:
-                    solicitarYActualizarCampoProducto(ptr,"Nivel de reorden actual: ",ptr->producto.nivelReorden,"Nivel de reorden nuevo: ","nivelReorden","Nivel de reorden actualizado");
+                    if(solicitarYActualizarCampoProducto(ptr,"Nivel de reorden actual: ",ptr->producto.nivelReorden,"Nivel de reorden nuevo: ","nivelReorden","Nivel de reorden actualizado")){
+                        productoModificado = true;
+                    }
                     break;
                 case 5:
                     limpiarConsola();
@@ -669,17 +698,20 @@ void menuModificaciones(NodoProducto* ptr){ //TODO: Modificar para que retorne T
                     break;
             }
         }
+    return productoModificado;
 }
 
-void solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito){
+bool solicitarYActualizarCampoProducto(NodoProducto* ptr, const string&textoActual, float valorActual, const string&textoNuevo, const string& campoModificar, const string& textoExito){
     float nuevoValor;
     cout << "\n" << textoActual << valorActual;
     cout << "\n" << textoNuevo; cin >> nuevoValor; validarInput();
     if(modificarProducto(ptr, campoModificar, nuevoValor)){
         limpiarConsola();
         cout << "\n\n"<< textoExito <<"\n\n";
+        return true;
     }else{
         cout << "\n\n*** Error. Intenta de nuevo ***\n\n";
+        return false;
     }
 }
 
