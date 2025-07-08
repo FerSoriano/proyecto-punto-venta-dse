@@ -92,6 +92,7 @@ void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefau
 bool agregarUsuarioLista(const Usuario& usuario);
 void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDefault);
 bool agregarProductoLista(const Producto& producto);
+void setUltimoProductoID(int id);
 // archivos
 bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
 bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
@@ -107,6 +108,7 @@ NodoUsuario* ultimoUsuario = NULL;
 NodoProducto* listaProductos = NULL;
 NodoProducto* ultimoProducto = NULL;
 
+int ultimoProductoID = 0; // almacena el ID del siguiente producto.
 int totalProductos = 0;
 int totalVentas = 0;
 Venta ventas[100];
@@ -255,8 +257,15 @@ bool agregarProductoLista(const Producto& producto){
     ultimoProducto = nuevoProducto;
 
     totalProductos++;
+    setUltimoProductoID(producto.id);
 
     return true;
+}
+
+void setUltimoProductoID(int id){
+    if(id >= ultimoProductoID){
+        ultimoProductoID = id + 1;
+    }
 }
 
 void limpiarConsola(){
@@ -331,7 +340,7 @@ void menuAdmin(){
                         existencia = solicitarNumeroAlUsuario("Existencia: ", 00.00, 99999.99, "\n\n*** Error en la cantidad. ***\n\n\n", false);
                         nivelReorden = solicitarNumeroAlUsuario("Nivel de Reorden: ", 00.00, existencia,"\n\n*** El Nivel de Reorden no puede ser mayor que la Existencia. Intenta de nuevo. ***\n\n\n", false);
                         
-                        id = totalProductos + 1;
+                        id = ultimoProductoID;
                         Producto nuevoProducto =  crearProducto(id,nombreProducto,pc,pv,existencia,nivelReorden);
                         if(agregarProductoLista(nuevoProducto) && agregarProductoAlArchivo(rutaArchivoProductos, nuevoProducto)){
                             cout << "\n\nEl producto \"" << nombreProducto << "\" se agrego correctamente.\n\n";
