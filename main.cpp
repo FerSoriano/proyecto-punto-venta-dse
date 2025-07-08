@@ -95,6 +95,7 @@ bool agregarProductoLista(const Producto& producto);
 // archivos
 bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
 bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
+bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminado);
 
 // variables globales
 
@@ -312,6 +313,9 @@ void menuAdmin(){
                         if(ptr != NULL){
                             if(ptr->producto.status == 0){
                                 if(reactivarProducto(ptr)){
+                                    if(!agregarProductoAlArchivo(rutaArchivoProductos, ptr->producto)){
+                                        cout << "\n\n*** Error inesperado al agregar el producto. ***\n\n";
+                                    }
                                     mostrarEncabezadosProducto();
                                     mostrarInfoProducto(ptr->producto);
                                     cout << "\n\nEl producto " << ptr->producto.producto << " se dio de alta nuevamente.\n\n";
@@ -336,13 +340,17 @@ void menuAdmin(){
                         }
                     }
                     break;
-                case 2: // baja           
+                case 2: // baja
+                // TODO: el borrado del archivo sera fisico, mientras se ejecute la app se podra dar de alta nuevamente.
                     while(true){
                         nombreProducto = solicitarProductoAlUsuario("BAJA DE PRODUCTO");
                         if (nombreProducto == "*"){limpiarConsola(); break;}
 
                         NodoProducto* ptr = buscarProducto(nombreProducto);
                         if(bajaProducto(ptr)){
+                            if(!eliminarProductoDelArchivo(rutaArchivoProductos,ptr->producto.producto)){
+                                cout << "\n\n*** ERROR: No se pudo eliminar el producto en el archivo. ***\n\n";
+                            }
                             cout << "\nEl producto \"" << ptr->producto.producto << "\" se dio de baja\n";
                         }else {
                             cout << "\n\n*** Producto \"" << nombreProducto << "\" no encontrado. Intenta de nuevo. ***\n\n"; 
@@ -369,7 +377,8 @@ void menuAdmin(){
                             cout << "\n\n*** No se encontro el producto \"" << nombreProducto << "\" ***\n\n";
                             continue;
                         }
-                        menuModificaciones(ptr);        
+                        menuModificaciones(ptr); //TODO: Crear if, si se cumple se modifica el archivo
+                        //TODO: Pendiente crear funcion para modificar elemento en el archivo.
                     }
                     break;
                 case 5:
@@ -613,7 +622,7 @@ void mostrarInfoProducto(const Producto& producto){
             << resurtir << endl;
 }
 
-void menuModificaciones(NodoProducto* ptr){
+void menuModificaciones(NodoProducto* ptr){ //TODO: Modificar para que retorne True si se modifico el usuario. Cambiar nombre a modificarUsuario?
     bool mostrarOpciones = true;
     float pc, pv;
     int existencia, nivelReorden, opcion;
@@ -696,6 +705,38 @@ bool bajaProducto(NodoProducto* ptr){
     return true;
 }
 
+bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminar){
+    string tmp = "tmp.dat";
+    ifstream archivoActual(rutaArchivo, ios::binary);
+    ofstream tmpFile(tmp, ios::binary | ios::out);
+
+    bool productoEliminado = false;
+    Producto bufferProdcuto;
+
+    while(!archivoActual.eof()){
+        archivoActual.read((char*)&bufferProdcuto, sizeof(Producto));
+        if(archivoActual.good()){
+            if(nombreProductoEliminar == bufferProdcuto.producto){
+                productoEliminado = true;
+                continue;
+            }
+            tmpFile.write((char*)&bufferProdcuto, sizeof(Producto));
+        }
+    }
+
+    archivoActual.close();
+    tmpFile.close();
+
+    if(productoEliminado){
+        remove(rutaArchivo.c_str()); // Convertir string a const char*
+        rename(tmp.c_str(), rutaArchivo.c_str());
+        return true;
+    }
+    remove(tmp.c_str());
+    return false;
+
+}
+
 void mostrarMenuAdminCuentasUsuario(){
     int option;
     bool ejecutarMenu = true;
@@ -721,6 +762,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     altaUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de altaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 2:
@@ -730,6 +772,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     bajaUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de bajaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 3:
@@ -748,6 +791,7 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     modificarUsuario(nodo, nombreUsuario);
+                    //TODO:Mandar a llamar aqui o debe ir dentro de modidicarUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 5:
@@ -824,6 +868,7 @@ void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
     }
 
     nodo->usuario.status = 0; 
+    //TODO: Llamar a funcion para eliminar usuario del archivo.
     cout << "\nEl usuario \"" << nodo->usuario.usuario << "\" se dio de baja\n";
 }
 
