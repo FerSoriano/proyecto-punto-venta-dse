@@ -1103,7 +1103,14 @@ void hacerVenta(){
                 continue;
             }
             if(nombreProducto == "**"){ // corte de caja vendedor
-                if(!compraRealizada){ cout << "\n\n*** Finaliza la compra primero con '*' e intenta de nuevo. ***\n\n\n"; continue; } limpiarConsola();
+                if(!compraRealizada){ 
+                    cout << "\n\n*** Finaliza la compra primero con '*' e intenta de nuevo. ***\n\n\n"; 
+                    continue; 
+                } 
+                limpiarConsola();
+                if(!actualizarArchivoProductos(rutaArchivoProductos)){
+                    cout << "\n\n*** ERROR: No se pudo actualizar el archivo Productos ***\n\n";
+                }
                 corteCajaVendedor(currentUser);
                 break;
             }
