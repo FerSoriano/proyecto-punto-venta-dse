@@ -197,6 +197,24 @@ bool eliminarUsuarioDelArchivo(string rutaArchivo, string nombreUsuarioEliminado
     return false;
 }
 
+bool actualizarArchivoUsuarios(string rutaArchivo){
+    ofstream archivo(rutaArchivo, ios::binary | ios::out);
+    if(!archivo.is_open()){
+        return false;
+    }
+
+    NodoUsuario* ptr = listaUsuarios;
+    Usuario usuario;
+    while(ptr != NULL){
+        usuario = ptr->usuario;
+        archivo.write((char*)&usuario,sizeof(Usuario));
+        ptr = ptr->next;
+    }
+
+    archivo.close();
+    return true;
+}
+
 void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefault){
     int totalUsuarios = 3;
     Usuario usuarios[3] = {
@@ -352,7 +370,7 @@ void menuAdmin(){
         int id, existencia, nivelReorden;
         
         while(ejecutarMenu){
-            cout << "\n\t\t\t\t\tUsuario: " << currentUser; //TODO: implementar en todos los menus?
+            cout << "\n\t\t\t\t\tUsuario: " << currentUser;
             cout << "\n\n\tMENU ADMINISTRADOR\n\n";
             cout << "1. Altas" << 
                 "\n2. Bajas" << 
@@ -865,7 +883,6 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     modificarUsuario(nodo, nombreUsuario);
-                    //TODO:Mandar a llamar aqui o debe ir dentro de modidicarUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 5:
@@ -966,6 +983,7 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
     string pass;
     int opcion, tipoUsuario;
     bool mostrarOpciones = true;
+    bool usuarioModificado = false;
     limpiarConsola();
     while(mostrarOpciones){
         cout << "\n\n\tMODIFICACIONES\n\nUsuario: "<< nombreUsuario << endl;
@@ -983,6 +1001,7 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
                 nodo->usuario.pass = pass; // actualizamos el password
                 limpiarConsola();
                 cout << "\n\n\tContraseña actualizada\n\n";
+                usuarioModificado = true;
                 break;
             case 2:
                 do{
@@ -1001,6 +1020,7 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
                 nodo->usuario.tipo = tipoUsuario;
                 limpiarConsola();
                 cout << "\n\n\tTipo de Usuario actualizado\n\n";
+                usuarioModificado = true;
                 break;
             case 3:
                 limpiarConsola();
@@ -1012,7 +1032,12 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
                 break;
         }
     }
-    //TODO: Si se modifico el usuario, entonces actualizar el archivo Usuarios.
+
+    if(usuarioModificado){
+        if(!actualizarArchivoUsuarios(rutaArchivoUsuarios)){
+            cout << "\n\n*** Error inesperado al modificar el archivo Usuarios. ***\n\n";
+        }
+    }
 }
 
 void mostrarEncabezadosUsuario(){

@@ -108,7 +108,6 @@ Usuario crearNuevoUsuario(const string& nombreUsuario){
 
 //////
 
-// TODO: Crear lista enlazada
 Nodo* inicializarListaUsuarios(){
     Usuario usuarios[3] = {
         {"admin", "123", 1, 1}, 
