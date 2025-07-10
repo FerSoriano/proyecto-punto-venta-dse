@@ -93,11 +93,14 @@ bool agregarUsuarioLista(const Usuario& usuario);
 void inicializarListaProductos(string rutaArchivo, bool crearArchivoProductosDefault);
 bool agregarProductoLista(const Producto& producto);
 void setUltimoProductoID(int id);
-// archivos
-bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
+// archivos productos
 bool agregarProductoAlArchivo(string rutaArchivo, Producto producto);
 bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoEliminado);
 bool actualizarArchivoProductos(string rutaArchivo);
+// archivos usuarios
+bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario);
+bool eliminarUsuarioDelArchivo(string rutaArchivo, string nombreUsuarioEliminado);
+bool actualizarArchivoUsuarios(string rutaArchivo);
 
 // variables globales
 
@@ -160,6 +163,38 @@ bool agregarUsuarioAlArchivo(string rutaArchivo, Usuario usuario){
     archivo.write((char*)&usuario, sizeof(Usuario));
     archivo.close();
     return true;
+}
+
+bool eliminarUsuarioDelArchivo(string rutaArchivo, string nombreUsuarioEliminado){
+    string tmp = "tmp.dat";
+    ifstream archivoActual(rutaArchivo, ios::binary);
+    ofstream tmpFile(tmp, ios::binary | ios::out);
+
+    bool usuarioEliminado = false;
+    Usuario bufferUsuario;
+
+    while(!archivoActual.eof()){
+        archivoActual.read((char*)&bufferUsuario, sizeof(Usuario));
+        if(archivoActual.good()){
+            if(nombreUsuarioEliminado == bufferUsuario.usuario){
+                usuarioEliminado = true;
+                continue;
+            }
+            tmpFile.write((char*)&bufferUsuario, sizeof(Usuario));
+        }
+    }
+
+    archivoActual.close();
+    tmpFile.close();
+
+    if(usuarioEliminado){
+        remove(rutaArchivo.c_str());
+        rename(tmp.c_str(),rutaArchivo.c_str());
+        return true;
+    }
+
+    remove(tmp.c_str());
+    return false;
 }
 
 void inicializarListaUsuarios(string rutaArchivo, bool crearArchivoUsuariosDefault){
@@ -773,9 +808,9 @@ bool eliminarProductoDelArchivo(string rutaArchivo, string nombreProductoElimina
         rename(tmp.c_str(), rutaArchivo.c_str());
         return true;
     }
+
     remove(tmp.c_str());
     return false;
-
 }
 
 void mostrarMenuAdminCuentasUsuario(){
@@ -803,7 +838,6 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     altaUsuario(nodo, nombreUsuario);
-                    //TODO:Mandar a llamar aqui o debe ir dentro de altaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 2:
@@ -813,7 +847,6 @@ void mostrarMenuAdminCuentasUsuario(){
                     if (nombreUsuario == "*"){limpiarConsola(); break;}
                     NodoUsuario* nodo = buscarUsuario(nombreUsuario);
                     bajaUsuario(nodo, nombreUsuario);
-                    //TODO:Mandar a llamar aqui o debe ir dentro de bajaUsuario? - Ver opcion de que retorne bool para sabe si debemos actualizar el archivo.
                 }
                 break;
             case 3:
@@ -909,7 +942,9 @@ void bajaUsuario(NodoUsuario* nodo, string nombreUsuario){
     }
 
     nodo->usuario.status = 0; 
-    //TODO: Llamar a funcion para eliminar usuario del archivo.
+    if(!eliminarUsuarioDelArchivo(rutaArchivoUsuarios, nodo->usuario.usuario)){
+        cout << "\n\n*** Error inesperado al eliminar el Usuario ***\n\n";
+    }
     cout << "\nEl usuario \"" << nodo->usuario.usuario << "\" se dio de baja\n";
 }
 
@@ -943,12 +978,12 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
         cin >> opcion; validarInput();
         switch(opcion){
             case 1:
-            cout << "\nContraseña actual: "<< nodo->usuario.pass;
-            cout << "\nContraseña nueva: "; cin >> pass;
-            nodo->usuario.pass = pass; // actualizamos el password
-            limpiarConsola();
-            cout << "\n\n\tContraseña actualizada\n\n";
-            break;
+                cout << "\nContraseña actual: "<< nodo->usuario.pass;
+                cout << "\nContraseña nueva: "; cin >> pass;
+                nodo->usuario.pass = pass; // actualizamos el password
+                limpiarConsola();
+                cout << "\n\n\tContraseña actualizada\n\n";
+                break;
             case 2:
                 do{
                     cout << "\nTipo actual: "<< nodo->usuario.tipo;
@@ -977,6 +1012,7 @@ void modificarUsuario(NodoUsuario* nodo, string nombreUsuario){
                 break;
         }
     }
+    //TODO: Si se modifico el usuario, entonces actualizar el archivo Usuarios.
 }
 
 void mostrarEncabezadosUsuario(){
